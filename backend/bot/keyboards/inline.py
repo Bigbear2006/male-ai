@@ -59,7 +59,12 @@ self_ratings_kb = InlineKeyboardMarkup(
 
 menu_kb = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text='Трекер привычек', callback_data='habits')],
+        [
+            InlineKeyboardButton(
+                text='Трекер привычек',
+                callback_data='habits_menu',
+            ),
+        ],
         [InlineKeyboardButton(text='Челленджи', callback_data='challenges')],
         [
             InlineKeyboardButton(
@@ -68,5 +73,18 @@ menu_kb = InlineKeyboardMarkup(
             ),
         ],
         [InlineKeyboardButton(text='SOS Кнопка', callback_data='sos_button')],
+    ],
+)
+
+habits_menu_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text='Добавить привычку',
+                callback_data='add_habit',
+            ),
+        ],
+        [InlineKeyboardButton(text='Все привычки', callback_data='habits')],
+        [InlineKeyboardButton(text='Назад', callback_data='to_menu')],
     ],
 )

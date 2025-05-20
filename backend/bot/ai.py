@@ -1,0 +1,23 @@
+from openai import NOT_GIVEN, AsyncOpenAI
+
+
+class ChatGPT:
+    def __init__(self):
+        self.client = AsyncOpenAI(base_url='https://api.proxyapi.ru/openai/v1')
+
+    async def answer(
+        self,
+        prompt: str,
+        *,
+        max_output_tokens: int = NOT_GIVEN,
+    ) -> str:
+        response = await self.client.responses.create(
+            input=prompt,
+            model='gpt-4.1',
+            max_output_tokens=max_output_tokens,
+        )
+        return response.output_text
+
+
+async def answer(prompt: str, *, max_output_tokens: int = NOT_GIVEN) -> str:
+    return await ChatGPT().answer(prompt, max_output_tokens=max_output_tokens)

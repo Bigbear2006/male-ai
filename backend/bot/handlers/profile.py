@@ -3,11 +3,13 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
+from bot.ai import answer
 from bot.keyboards.inline import menu_kb
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
+from bot.prompts import select_month_goal_prompt
 from bot.states import ProfileState
 from core.choices import UpgradeStyle
-from core.models import Profile
+from core.models import Profile, Survey
 
 router = Router()
 
@@ -17,10 +19,14 @@ router = Router()
     StateFilter(ProfileState.month_goal),
 )
 async def set_month_goal_with_ai(query: CallbackQuery, state: FSMContext):
-    month_goal = 'стать лучшей версией себя'
+    await query.message.edit_text(
+        f'{query.message.text}\n\nВыбираю подходящую цель...'
+    )
+    survey = await Survey.objects.aget(pk=query.message.chat.id)
+    month_goal = await answer(select_month_goal_prompt(survey))
     await state.update_data(month_goal=month_goal)
     await query.message.edit_text(
-        f'ИИ предлагает цель: {month_goal}\n\n'
+        f'ИИ предлагает цель:\n{month_goal}\n\n'
         f'Ты можешь выбрать эту цель или написать свою.',
         reply_markup=one_button_keyboard(
             text='Выбрать эту цель',
@@ -45,7 +51,7 @@ async def set_month_goal(msg: Message | CallbackQuery, state: FSMContext):
     await state.update_data(month_goal=month_goal)
     await state.set_state(ProfileState.growth_zones)
     await answer_func(
-        'Напиши 2-3 зоны роста - ключевые фокусы.',
+        text='Напиши 2-3 зоны роста - ключевые фокусы.',
         reply_markup=None,
     )
 

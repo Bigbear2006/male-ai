@@ -6,6 +6,7 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
+from bot.ai import answer
 from bot.greetings import greetings
 from bot.keyboards.inline import ages_kb, self_ratings_kb
 from bot.keyboards.utils import (
@@ -13,6 +14,7 @@ from bot.keyboards.utils import (
     keyboard_from_choices,
     one_button_keyboard,
 )
+from bot.prompts import state_analysis_prompt
 from bot.states import ProfileState, SurveyState
 from core.choices import (
     EnergyDirection,
@@ -20,7 +22,7 @@ from core.choices import (
     SupportOption,
     SupportStyle,
 )
-from core.models import Profile, Survey
+from core.models import Survey
 
 router = Router()
 
@@ -184,7 +186,7 @@ async def set_support_option(query: CallbackQuery, state: FSMContext):
 @router.message(F.text, StateFilter(SurveyState.key_quality))
 async def set_key_quality(msg: Message, state: FSMContext):
     data = await state.get_data()
-    await Survey.objects.acreate(
+    survey = await Survey.objects.acreate(
         client_id=msg.chat.id,
         preferred_name=data['preferred_name'],
         age=data['age'],
@@ -199,12 +201,13 @@ async def set_key_quality(msg: Message, state: FSMContext):
         key_quality=msg.text,
     )
 
-    start_point = 'тут должен быть анализ состояния.'
+    msg_to_edit = await msg.answer('Составляю твой профиль 1.0...')
+    start_point = await answer(state_analysis_prompt(survey))
     await state.set_data({'start_point': start_point})
     await state.set_state(ProfileState.month_goal)
-    await msg.answer(
-        'Твой профиль 1.0 готов!\n'
-        f'Вот твоя точка старта: {start_point}\n\n'
+    await msg_to_edit.edit_text(
+        'Твой профиль 1.0 готов!\n\n'
+        f'Вот твоя точка старта:\n{start_point}\n\n'
         'Напиши свою цель на следующие 30 дней.',
         reply_markup=one_button_keyboard(
             text='Доверить выбор цели ИИ',

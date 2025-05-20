@@ -23,3 +23,8 @@ class ProfileState(StatesGroup):
     month_goal = State()
     growth_zones = State()
     upgrade_style = State()
+
+
+class HabitState(StatesGroup):
+    add = State()
+    update = State()

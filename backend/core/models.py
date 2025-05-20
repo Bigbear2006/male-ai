@@ -133,6 +133,25 @@ class Survey(models.Model):
     def __str__(self):
         return str(self.client)
 
+    @property
+    def info(self):
+        energy_directions = ', '.join(
+            [EnergyDirection(i) for i in self.energy_directions],
+        )
+        return (
+            f'Как обращаться: {self.preferred_name}\n'
+            f'Возраст: {self.age}\n'
+            f'Внутреннее состояние: {self.shape}\n'
+            f'Что последнее дало силы или радость: {self.last_forces_source}\n'
+            f'Насколько доволен собой сейчас (1-10): {self.self_rating}\n'
+            f'Куда чаще всего уходит энергия: {energy_directions}\n'
+            f'Что сейчас важнее всего: {Purpose(self.purpose)}\n'
+            f'Кем хочет стать через 30 дней: {self.future_version}\n'
+            f'Стиль поддержки: {SupportStyle(self.support_style)}\n'
+            f'Что больше помогает, когда что-то идет не так: '
+            f'{SupportOption(self.support_option)}'
+        )
+
 
 class Profile(models.Model):
     client = models.OneToOneField(

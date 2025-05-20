@@ -12,6 +12,8 @@ async def main():
 
     from bot.handlers import (
         faq,
+        habits,
+        menu,
         profile,
         start,
         subscribe,
@@ -21,10 +23,12 @@ async def main():
 
     dp.include_routers(
         start.router,
+        menu.router,
         try_free_version.router,
         subscribe.router,
         survey.router,
         profile.router,
+        habits.router,
         faq.router,
     )
 
