@@ -28,3 +28,23 @@ class ProfileState(StatesGroup):
 class HabitState(StatesGroup):
     add = State()
     update = State()
+
+
+class DayResultState(StatesGroup):
+    result = State()
+
+
+class DailyCycleState(StatesGroup):
+    morning_wellbeing = State()
+    success_result = State()
+    fail_result = State()
+    feelings = State()
+    evening_wellbeing = State()
+
+
+class SosButtonState(StatesGroup):
+    problem = State()
+
+
+class ChallengeState(StatesGroup):
+    answer_task_questions = State()

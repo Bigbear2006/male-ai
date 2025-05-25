@@ -39,10 +39,17 @@ class SupportStyle(TextChoices):
 class SupportOption(TextChoices):
     CALM_REMINDER = 'calm_reminder', 'Спокойное напоминание: ты можешь'
     DIRECT_CHALLENGE = 'direct_challenge', 'Прямой вызов: давай, соберись'
-    QUESTION = 'question', 'Вопрос: что ты чувствуешь и готов сделать?'
+    QUESTION = 'question', 'Что ты чувствуешь и готов сделать?'
 
 
 class UpgradeStyle(TextChoices):
     SOFT = 'soft', 'Мягкий'
     HARD = 'hard', 'Жёсткий'
     ADAPTIVE = 'adaptive', 'Адаптивный'
+
+
+class ManifestType(TextChoices):
+    CALM = 'calm', 'Спокойно'
+    FOCUS = 'focus', 'С фокусом'
+    PRESSURE = 'pressure', 'С напором'
+    PACE = 'pace', 'С темпом'

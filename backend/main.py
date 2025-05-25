@@ -11,28 +11,37 @@ async def main():
     django.setup()
 
     from bot.handlers import (
+        challenges,
+        courses,
+        daily_cycle,
+        day_result,
         faq,
         habits,
-        menu,
         profile,
+        sos_button,
         start,
         subscribe,
         survey,
+        tests,
         try_free_version,
     )
+    from bot.middlewares import WithClientMiddleware
 
     dp.include_routers(
         start.router,
-        menu.router,
         try_free_version.router,
         subscribe.router,
         survey.router,
         profile.router,
+        daily_cycle.router,
+        day_result.router,
+        sos_button.router,
         habits.router,
+        courses.router,
+        challenges.router,
         faq.router,
+        tests.router,
     )
-
-    from bot.middlewares import WithClientMiddleware
 
     dp.message.middleware(WithClientMiddleware())
     dp.callback_query.middleware(WithClientMiddleware())

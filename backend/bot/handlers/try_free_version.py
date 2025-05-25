@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from bot.keyboards.inline import back_to_start_kb
-from bot.keyboards.utils import keyboard_from_choices
+from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from core.choices import Priority, SpendTime
 from core.models import Client
 
@@ -17,7 +17,11 @@ async def try_free_version(query: CallbackQuery, client: Client):
         await query.message.edit_text(
             'Ты уже заполнил данные.\n'
             'Я буду присылать тебе сообщения каждый день.',
-            reply_markup=back_to_start_kb,
+            reply_markup=one_button_keyboard(
+                text='SOS Кнопка',
+                callback_data='sos_button',
+                back_button_data='to_start',
+            ),
         )
         return
 
@@ -50,5 +54,5 @@ async def set_spend_time(query: CallbackQuery, state: FSMContext):
     await state.clear()
     await query.message.edit_text(
         'Записал!',
-        reply_markup=None,
+        reply_markup=back_to_start_kb,
     )

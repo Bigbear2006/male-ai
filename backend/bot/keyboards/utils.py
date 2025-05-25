@@ -4,7 +4,7 @@ from django.db.models import Choices, QuerySet
 
 from bot.config import config
 from core.choices import EnergyDirection
-from core.models import Habit
+from core.models import Course, Habit
 
 
 async def get_pagination_buttons(
@@ -150,3 +150,11 @@ def get_habit_kb(habit_id: int):
             ],
         ],
     )
+
+
+async def get_courses_kb():
+    kb = InlineKeyboardBuilder()
+    async for course in Course.objects.all():
+        kb.button(text=str(course), url=f'{course.url}')
+    kb.button(text='Назад', callback_data='to_start')
+    return kb.adjust(1).as_markup()

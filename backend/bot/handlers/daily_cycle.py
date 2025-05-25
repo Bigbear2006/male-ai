@@ -1,0 +1,102 @@
+from aiogram import F, Router, flags
+from aiogram.filters import StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
+from django.utils.timezone import now
+
+from bot import ai
+from bot.keyboards.inline import wellbeing_kb
+from bot.prompts import evening_support_prompt, morning_extended_message_prompt
+from bot.states import DailyCycleState
+from core.choices import ManifestType
+from core.models import Client, DailyCycle
+
+router = Router()
+
+
+@router.callback_query(F.data.startswith('manifest_type'))
+@flags.with_client
+async def set_manifest_type(
+    query: CallbackQuery,
+    state: FSMContext,
+    client: Client,
+):
+    await query.message.edit_text('Подбираю микро цель...')
+    manifest_type = ManifestType(query.data.split(':')[1])
+    text = await ai.answer(
+        await morning_extended_message_prompt(client, manifest_type),
+    )
+
+    await state.update_data(manifest_type=manifest_type.value)
+    await state.set_state(DailyCycleState.morning_wellbeing)
+    await query.message.edit_text(text)
+    await query.message.answer(
+        'Как твое самочувствие?',
+        reply_markup=wellbeing_kb,
+    )
+
+
+@router.callback_query(DailyCycleState.morning_wellbeing)
+async def set_wellbeing(query: CallbackQuery, state: FSMContext):
+    await DailyCycle.objects.acreate(
+        client_id=query.message.chat.id,
+        manifest_type=await state.get_value('manifest_type'),
+        morning_wellbeing=query.data,
+    )
+    await state.clear()
+    await query.message.edit_text('Записал!')
+
+
+@router.callback_query(F.data == 'set_success_result')
+async def set_success_result(query: CallbackQuery, state: FSMContext):
+    await state.set_state(DailyCycleState.success_result)
+    await query.message.edit_text(
+        f'{query.message.text}\nЖду твоего ответа...',
+    )
+
+
+@router.message(F.text, StateFilter(DailyCycleState.success_result))
+async def set_success_result_2(msg: Message, state: FSMContext):
+    await state.update_data(success_result=msg.text)
+    await state.set_state(DailyCycleState.fail_result)
+    await msg.answer('Что не получилось - и почему?')
+
+
+@router.message(F.text, StateFilter(DailyCycleState.fail_result))
+async def set_fail_result(msg: Message, state: FSMContext):
+    await state.update_data(fail_result=msg.text)
+    await state.set_state(DailyCycleState.feelings)
+    await msg.answer('Что почувствовал?')
+
+
+@router.message(F.text, StateFilter(DailyCycleState.feelings))
+async def set_feelings(msg: Message, state: FSMContext):
+    await state.update_data(feelings=msg.text)
+    await state.set_state(DailyCycleState.evening_wellbeing)
+    await msg.answer('Твоя самооценка', reply_markup=wellbeing_kb)
+
+
+@router.callback_query(StateFilter(DailyCycleState.evening_wellbeing))
+@flags.with_client
+async def set_evening_wellbeing(
+    query: CallbackQuery,
+    state: FSMContext,
+    client: Client,
+):
+    data = await state.get_data()
+    defaults = {
+        'success_result': data['success_result'],
+        'fail_result': data['fail_result'],
+        'feelings': data['feelings'],
+        'evening_wellbeing': query.data,
+    }
+
+    await DailyCycle.objects.aupdate_or_create(
+        defaults,
+        created_at__date=now().date(),
+        client_id=query.message.chat.id,
+    )
+
+    text = await ai.answer(await evening_support_prompt(client))
+    await state.clear()
+    await query.message.edit_text(text)

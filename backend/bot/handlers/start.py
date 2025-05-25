@@ -1,4 +1,4 @@
-from aiogram import F, Router
+from aiogram import F, Router, flags
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 
@@ -40,8 +40,13 @@ async def start(msg: Message):
 
 
 @router.callback_query(F.data == 'to_start')
-async def to_start(query: CallbackQuery):
+@flags.with_client
+async def to_start(query: CallbackQuery, client: Client):
+    if client.subscription_is_active():
+        await query.message.edit_text('Главное меню', reply_markup=menu_kb)
+        return
+
     await query.message.edit_text(
-        f'Привет, {query.message.from_user.full_name}!',
+        f'Привет, {query.message.chat.full_name}!',
         reply_markup=start_kb,
     )

@@ -9,6 +9,7 @@ from django.utils.timezone import now
 
 from core.choices import (
     EnergyDirection,
+    ManifestType,
     Priority,
     Purpose,
     SpendTime,
@@ -16,7 +17,7 @@ from core.choices import (
     SupportStyle,
     UpgradeStyle,
 )
-from core.managers import ClientManager
+from core.managers import ClientManager, DailyCycleManager
 
 
 class User(AbstractUser):
@@ -79,6 +80,13 @@ class Client(models.Model):
         except ObjectDoesNotExist:
             return
 
+    @property
+    def info(self):
+        return (
+            f'Приоритет: {Priority(self.priority).label}\n'
+            f'Готов уделять времени {SpendTime(self.spend_time).label}'
+        )
+
 
 class Survey(models.Model):
     client = models.OneToOneField(
@@ -136,7 +144,7 @@ class Survey(models.Model):
     @property
     def info(self):
         energy_directions = ', '.join(
-            [EnergyDirection(i) for i in self.energy_directions],
+            [str(EnergyDirection(i).label) for i in self.energy_directions],
         )
         return (
             f'Как обращаться: {self.preferred_name}\n'
@@ -145,11 +153,11 @@ class Survey(models.Model):
             f'Что последнее дало силы или радость: {self.last_forces_source}\n'
             f'Насколько доволен собой сейчас (1-10): {self.self_rating}\n'
             f'Куда чаще всего уходит энергия: {energy_directions}\n'
-            f'Что сейчас важнее всего: {Purpose(self.purpose)}\n'
+            f'Что сейчас важнее всего: {Purpose(self.purpose).label}\n'
             f'Кем хочет стать через 30 дней: {self.future_version}\n'
-            f'Стиль поддержки: {SupportStyle(self.support_style)}\n'
+            f'Стиль поддержки: {SupportStyle(self.support_style).label}\n'
             f'Что больше помогает, когда что-то идет не так: '
-            f'{SupportOption(self.support_option)}'
+            f'{SupportOption(self.support_option).label}'
         )
 
 
@@ -176,6 +184,14 @@ class Profile(models.Model):
     def __str__(self):
         return str(self.client)
 
+    @property
+    def info(self):
+        return (
+            f'Цель на 30 дней: {self.month_goal}\n'
+            f'Зоны роста: {self.growth_zones}\n'
+            f'Стиль прокачки: {UpgradeStyle(self.upgrade_style).label}'
+        )
+
 
 class Habit(models.Model):
     client = models.ForeignKey(
@@ -194,3 +210,219 @@ class Habit(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class DayResult(models.Model):
+    client = models.ForeignKey(
+        Client,
+        models.CASCADE,
+        'days_results',
+        unique_for_date='created_at',
+        verbose_name='Пользователь',
+    )
+    result = models.CharField(
+        'Что получилось лучше, чем вчера',
+        max_length=255,
+    )
+    created_at = models.DateTimeField('Дата', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Результат дня'
+        verbose_name_plural = 'Ежедневные результаты'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.client} - {self.result[:50]}'
+
+
+class DailyCycle(models.Model):
+    client = models.ForeignKey(
+        Client,
+        models.CASCADE,
+        'daily_cycles',
+        unique_for_date='created_at',
+        verbose_name='Пользователь',
+    )
+    manifest_type = models.CharField(
+        'Как хочет проявиться',
+        max_length=20,
+        choices=ManifestType,
+        blank=True,
+    )
+    morning_wellbeing = models.IntegerField(
+        'Самочувствие утром',
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        null=True,
+        blank=True,
+    )
+    success_result = models.TextField('Что удалось', blank=True)
+    fail_result = models.TextField('Что не получилось и почему', blank=True)
+    feelings = models.TextField('Что почувствовал', blank=True)
+    evening_wellbeing = models.IntegerField(
+        'Самочувствие вечером',
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField('Дата', auto_now_add=True)
+    objects = DailyCycleManager()
+
+    class Meta:
+        verbose_name = 'Ежедневный цикл'
+        verbose_name_plural = 'Ежедневные циклы'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.client} - {self.success_result[:50]}'
+
+    @property
+    def info(self):
+        if self.manifest_type in ManifestType:
+            manifest_type = ManifestType(self.manifest_type).label
+        else:
+            manifest_type = self.manifest_type
+
+        return (
+            f'Дата: {self.created_at.date()}'
+            f'Как хочет проявиться: {manifest_type}'
+            f'Самочувствие утром: {self.morning_wellbeing}'
+            f'Что удалось: {self.success_result}'
+            f'Что не получилось и почему: {self.fail_result}'
+            f'Что почувствовал: {self.feelings}'
+            f'Самочувствие вечером: {self.evening_wellbeing}'
+        )
+
+
+class Course(models.Model):
+    title = models.CharField('Название', max_length=255)
+    url = models.URLField('Ссылка')
+
+    class Meta:
+        verbose_name = 'Микро курс'
+        verbose_name_plural = 'Микро курсы'
+        ordering = ['title']
+
+    def __str__(self):
+        return self.title
+
+
+class Challenge(models.Model):
+    title = models.CharField('Название', max_length=255)
+    description = models.TextField('Описание')
+    suitable_for = models.CharField('Подходит для', max_length=255)
+
+    class Meta:
+        verbose_name = 'Челлендж'
+        verbose_name_plural = 'Челленджи'
+        ordering = ['title']
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def message_text(self):
+        return (
+            f'Челлендж: {self.title}\n\n'
+            f'Описание:\n{self.description}\n\n'
+            f'Подходит для: {self.suitable_for}'
+        )
+
+
+class ChallengeTask(models.Model):
+    challenge = models.ForeignKey(
+        Challenge,
+        models.CASCADE,
+        'tasks',
+        verbose_name='Челлендж',
+    )
+    day = models.IntegerField(
+        'День',
+        validators=[MinValueValidator(1)],
+    )
+    title = models.TextField('Задание')
+    setup = models.TextField('Установка')
+
+    class Meta:
+        unique_together = ('challenge', 'day')
+        verbose_name = 'Задание челленджа'
+        verbose_name_plural = 'Задания челленджей'
+        ordering = ['title']
+
+    def __str__(self):
+        return f'День {self.day}: {self.title[:50]}...'
+
+    @property
+    def message_text(self):
+        return (
+            f'Челлендж {self.challenge.title}\n\n'
+            f'День {self.day}\n\n'
+            f'Задание:\n{self.title}\n\n'
+            f'Установка:\n{self.setup}'
+        )
+
+
+class ChallengeTaskQuestion(models.Model):
+    task = models.ForeignKey(
+        ChallengeTask,
+        models.CASCADE,
+        'questions',
+        verbose_name='Задание челленджа',
+    )
+    title = models.CharField('Вопрос', max_length=255)
+
+    class Meta:
+        verbose_name = 'Вопрос к заданию челленджа'
+        verbose_name_plural = 'Вопросы к заданиям челленджей'
+        ordering = ['title']
+
+    def __str__(self):
+        return self.title
+
+
+class ClientChallenge(models.Model):
+    client = models.ForeignKey(
+        Client,
+        models.CASCADE,
+        'challenges',
+        verbose_name='Пользователь',
+    )
+    challenge = models.ForeignKey(
+        Challenge,
+        models.CASCADE,
+        'clients',
+        verbose_name='Челлендж',
+    )
+    created_at = models.DateTimeField('Дата', auto_now_add=True)
+
+    class Meta:
+        unique_together = ('client', 'challenge')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.client} - {self.challenge}'
+
+
+class ClientChallengeTaskQuestion(models.Model):
+    client = models.ForeignKey(
+        Client,
+        models.CASCADE,
+        'answers',
+        verbose_name='Пользователь',
+    )
+    question = models.ForeignKey(
+        ChallengeTaskQuestion,
+        models.CASCADE,
+        'clients',
+        verbose_name='Вопрос',
+    )
+    answer = models.CharField('Ответ', max_length=255)
+    created_at = models.DateTimeField('Дата', auto_now_add=True)
+
+    class Meta:
+        unique_together = ('client', 'question')
+        verbose_name = 'Ответ на вопрос челленджа'
+        verbose_name_plural = 'Ответы на вопросы челленджей'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.client} - {self.answer}'

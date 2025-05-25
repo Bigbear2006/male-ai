@@ -85,6 +85,15 @@ habits_menu_kb = InlineKeyboardMarkup(
             ),
         ],
         [InlineKeyboardButton(text='Все привычки', callback_data='habits')],
-        [InlineKeyboardButton(text='Назад', callback_data='to_menu')],
+        [InlineKeyboardButton(text='Назад', callback_data='to_start')],
+    ],
+)
+
+wellbeing_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text=str(i), callback_data=str(i))
+            for i in range(1, 6)
+        ],
     ],
 )

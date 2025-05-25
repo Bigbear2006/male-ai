@@ -5,6 +5,11 @@ from core import models
 
 admin.site.unregister(Group)
 
+admin.site.register(models.Course)
+admin.site.register(models.Challenge)
+admin.site.register(models.ChallengeTask)
+admin.site.register(models.ChallengeTaskQuestion)
+
 
 @admin.register(models.Client)
 class ClientAdmin(admin.ModelAdmin):
@@ -23,4 +28,14 @@ class SurveyAdmin(admin.ModelAdmin):
 
 @admin.register(models.Profile)
 class ProfileAdmin(admin.ModelAdmin):
+    list_select_related = ('client',)
+
+
+@admin.register(models.DayResult)
+class DayResultAdmin(admin.ModelAdmin):
+    list_select_related = ('client',)
+
+
+@admin.register(models.DailyCycle)
+class DailyCycleAdmin(admin.ModelAdmin):
     list_select_related = ('client',)

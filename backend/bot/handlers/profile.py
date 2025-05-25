@@ -3,7 +3,7 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot.ai import answer
+from bot import ai
 from bot.keyboards.inline import menu_kb
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from bot.prompts import select_month_goal_prompt
@@ -20,10 +20,10 @@ router = Router()
 )
 async def set_month_goal_with_ai(query: CallbackQuery, state: FSMContext):
     await query.message.edit_text(
-        f'{query.message.text}\n\nВыбираю подходящую цель...'
+        f'{query.message.text}\n\nВыбираю подходящую цель...',
     )
     survey = await Survey.objects.aget(pk=query.message.chat.id)
-    month_goal = await answer(select_month_goal_prompt(survey))
+    month_goal = await ai.answer(select_month_goal_prompt(survey))
     await state.update_data(month_goal=month_goal)
     await query.message.edit_text(
         f'ИИ предлагает цель:\n{month_goal}\n\n'

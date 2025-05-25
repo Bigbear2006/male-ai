@@ -6,7 +6,7 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot.ai import answer
+from bot import ai
 from bot.greetings import greetings
 from bot.keyboards.inline import ages_kb, self_ratings_kb
 from bot.keyboards.utils import (
@@ -202,7 +202,7 @@ async def set_key_quality(msg: Message, state: FSMContext):
     )
 
     msg_to_edit = await msg.answer('Составляю твой профиль 1.0...')
-    start_point = await answer(state_analysis_prompt(survey))
+    start_point = await ai.answer(state_analysis_prompt(survey))
     await state.set_data({'start_point': start_point})
     await state.set_state(ProfileState.month_goal)
     await msg_to_edit.edit_text(
