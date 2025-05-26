@@ -29,3 +29,10 @@ admin:
 
 shell:
 	docker-compose exec django python manage.py shell
+
+load:
+	docker-compose exec django python manage.py loaddata data.json
+
+dump:
+	docker-compose exec django python manage.py dumpdata -o data.json --indent 2 \
+	core.course core.challenge core.challengetask core.challengetaskquestion

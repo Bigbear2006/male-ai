@@ -6,9 +6,15 @@ from core import models
 admin.site.unregister(Group)
 
 admin.site.register(models.Course)
-admin.site.register(models.Challenge)
-admin.site.register(models.ChallengeTask)
 admin.site.register(models.ChallengeTaskQuestion)
+
+
+class ChallengeTaskInline(admin.StackedInline):
+    model = models.ChallengeTask
+
+
+class ChallengeTaskQuestionInline(admin.TabularInline):
+    model = models.ChallengeTaskQuestion
 
 
 @admin.register(models.Client)
@@ -39,3 +45,13 @@ class DayResultAdmin(admin.ModelAdmin):
 @admin.register(models.DailyCycle)
 class DailyCycleAdmin(admin.ModelAdmin):
     list_select_related = ('client',)
+
+
+@admin.register(models.Challenge)
+class ChallengeAdmin(admin.ModelAdmin):
+    inlines = [ChallengeTaskInline]
+
+
+@admin.register(models.ChallengeTask)
+class ChallengeTaskAdmin(admin.ModelAdmin):
+    inlines = [ChallengeTaskQuestionInline]

@@ -1,0 +1,127 @@
+[
+{
+  "model": "core.course",
+  "pk": 1,
+  "fields": {
+    "title": "Как говорить нет",
+    "url": "https://google.com"
+  }
+},
+{
+  "model": "core.course",
+  "pk": 2,
+  "fields": {
+    "title": "Уверенность без агрессии",
+    "url": "https://google.com"
+  }
+},
+{
+  "model": "core.course",
+  "pk": 3,
+  "fields": {
+    "title": "Дисциплина без насилия",
+    "url": "https://google.com"
+  }
+},
+{
+  "model": "core.course",
+  "pk": 4,
+  "fields": {
+    "title": "Стоическая устойчивость",
+    "url": "https://google.com"
+  }
+},
+{
+  "model": "core.course",
+  "pk": 5,
+  "fields": {
+    "title": "Как не срываться",
+    "url": "https://google.com"
+  }
+},
+{
+  "model": "core.challenge",
+  "pk": 1,
+  "fields": {
+    "title": "7 дней дисциплины",
+    "description": "Этот челлендж — про уважение к себе. Не “качество выполнения”, а “стабильность усилия”. Маленькие шаги, каждый день — без оправданий.",
+    "suitable_for": "любого уровня. Можно проходить в адаптивном режиме."
+  }
+},
+{
+  "model": "core.challengetask",
+  "pk": 1,
+  "fields": {
+    "challenge": 1,
+    "day": 1,
+    "title": "Выбери 1 простое правило на день. И соблюдай его. Примеры: не проверять телефон до завтрака / 2 часа фокусной работы / без сахара.",
+    "setup": "«Сегодня — не про идеальность. Про верность себе.»"
+  }
+},
+{
+  "model": "core.challengetask",
+  "pk": 2,
+  "fields": {
+    "challenge": 1,
+    "day": 2,
+    "title": "Сделай 1 задачу, которую откладывал дольше недели. Пусть даже частично.",
+    "setup": "«Дисциплина — это не делать больше. Это начать.»"
+  }
+},
+{
+  "model": "core.challengetaskquestion",
+  "pk": 1,
+  "fields": {
+    "task": 1,
+    "title": "Получилось?"
+  }
+},
+{
+  "model": "core.challengetaskquestion",
+  "pk": 2,
+  "fields": {
+    "task": 1,
+    "title": "Что помогло?"
+  }
+},
+{
+  "model": "core.challengetaskquestion",
+  "pk": 3,
+  "fields": {
+    "task": 1,
+    "title": "Что мешало?"
+  }
+},
+{
+  "model": "core.challengetaskquestion",
+  "pk": 4,
+  "fields": {
+    "task": 1,
+    "title": "Как себя чувствуешь после?"
+  }
+},
+{
+  "model": "core.challengetaskquestion",
+  "pk": 5,
+  "fields": {
+    "task": 2,
+    "title": "Выполнил?"
+  }
+},
+{
+  "model": "core.challengetaskquestion",
+  "pk": 6,
+  "fields": {
+    "task": 2,
+    "title": "Что почувствовал, когда начал?"
+  }
+},
+{
+  "model": "core.challengetaskquestion",
+  "pk": 7,
+  "fields": {
+    "task": 2,
+    "title": "Что изменилось в состоянии?"
+  }
+}
+]
