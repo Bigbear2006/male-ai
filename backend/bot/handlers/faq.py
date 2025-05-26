@@ -1,7 +1,9 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
+from bot.config import config
 from bot.keyboards.inline import back_to_start_kb
+from bot.keyboards.utils import one_button_keyboard
 
 router = Router()
 
@@ -30,5 +32,9 @@ async def faq(query: CallbackQuery):
         '⸻\n\n'
         '5. Где задать вопрос или получить помощь?\n'
         'Нажми кнопку ниже — мы на связи.',
-        reply_markup=back_to_start_kb,
+        reply_markup=one_button_keyboard(
+            text='Менеджер',
+            url=config.SUPPORT_LINK,
+            back_button_data='to_start',
+        ),
     )

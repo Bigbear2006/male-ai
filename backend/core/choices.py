@@ -53,3 +53,9 @@ class ManifestType(TextChoices):
     FOCUS = 'focus', 'С фокусом'
     PRESSURE = 'pressure', 'С напором'
     PACE = 'pace', 'С темпом'
+
+
+class ScheduleType(TextChoices):
+    BASIC = 'basic', 'Базовый'
+    FOCUS = 'focus', 'Фокусный'
+    HARD = 'hard', 'Жёсткий'

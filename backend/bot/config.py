@@ -15,6 +15,7 @@ class Config:
     SUPPORT_LINK: str = field(default='https://t.me/bottecda')
     CURRENCY: str = field(default='RUB')
     PAGE_SIZE: int = field(default=5)
+    TIME_FMT: str = field(default='%H:%M')
 
 
 config = Config()

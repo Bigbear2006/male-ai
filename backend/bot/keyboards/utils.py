@@ -39,11 +39,11 @@ async def keyboard_from_queryset(
 ) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
 
-    if back_button_data:
-        kb.button(text='Назад', callback_data=back_button_data)
-
     async for obj in queryset:
         kb.button(text=str(obj), callback_data=f'{prefix}:{obj.pk}')
+
+    if back_button_data:
+        kb.button(text='Назад', callback_data=back_button_data)
 
     kb.adjust(1)
     kb.row(

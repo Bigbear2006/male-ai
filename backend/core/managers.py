@@ -43,8 +43,14 @@ class ClientManager(models.Manager):
     async def update_by_id(self, pk: int, **kwargs):
         await self.filter(pk=pk).aupdate(**kwargs)
 
-    def get_subscribed(self):
-        return self.filter(subscription_end__gte=now())
+    def get_subscribed(self, *, exclude_survey_unfilled: bool = False):
+        qs = self.filter(subscription_end__gte=now())
+        if exclude_survey_unfilled:
+            return qs.exclude(
+                survey__isnull=True,
+                profile__isnull=True,
+            )
+        return qs
 
     def get_unsubscribed(self, *, exclude_survey_unfilled: bool = False):
         qs = self.filter(

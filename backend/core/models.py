@@ -1,3 +1,4 @@
+from datetime import time
 from typing import Optional
 
 from django.contrib.auth.models import AbstractUser
@@ -7,17 +8,23 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.timezone import now
 
+from bot.config import config
 from core.choices import (
     EnergyDirection,
     ManifestType,
     Priority,
     Purpose,
+    ScheduleType,
     SpendTime,
     SupportOption,
     SupportStyle,
     UpgradeStyle,
 )
 from core.managers import ClientManager, DailyCycleManager
+
+
+def strftime(__time: time):
+    return __time.strftime(config.TIME_FMT)
 
 
 class User(AbstractUser):
@@ -291,6 +298,59 @@ class DailyCycle(models.Model):
             f'Что почувствовал: {self.feelings}'
             f'Самочувствие вечером: {self.evening_wellbeing}'
         )
+
+
+class Schedule(models.Model):
+    client = models.OneToOneField(
+        Client,
+        models.CASCADE,
+        primary_key=True,
+        verbose_name='Пользователь',
+    )
+    schedule_type = models.CharField(
+        'Тип расписания',
+        max_length=255,
+        choices=ScheduleType,
+    )
+
+    class Meta:
+        verbose_name = 'Режим дня'
+        verbose_name_plural = 'Режимы дня'
+
+    def __str__(self):
+        return self.client
+
+    @property
+    def message_text(self):
+        blocks = '\n'.join([i.message_text for i in self.time_blocks.all()])
+        return (
+            f'Режим дня: {ScheduleType(self.schedule_type).label}\n\n'
+            f'Блоки:\n{blocks}'
+        )
+
+
+class TimeBlock(models.Model):
+    schedule = models.ForeignKey(Schedule, models.CASCADE, 'time_blocks')
+    name = models.CharField('Название блока', max_length=255)
+    start_time = models.TimeField('Дата начала')
+    end_time = models.TimeField('Дата завершения', null=True)
+
+    class Meta:
+        verbose_name = 'Блок режима дня'
+        verbose_name_plural = 'Блоки режимов дня'
+        ordering = ['start_time']
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def message_text(self):
+        if self.end_time:
+            return (
+                f'{self.name}: '
+                f'{strftime(self.start_time)} - {strftime(self.end_time)}'
+            )
+        return f'{self.name}: с {strftime(self.start_time)}'
 
 
 class Course(models.Model):

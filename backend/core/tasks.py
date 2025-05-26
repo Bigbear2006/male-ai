@@ -124,7 +124,7 @@ async def send_morning_messages():
     await asyncio_wait(
         [
             asyncio.create_task(safe_send_message(c.pk, text, reply_markup=kb))
-            async for c in Client.objects.get_subscribed()
+            async for c in Client.objects.get_subscribed(exclude_survey_unfilled=True,)
         ],
     )
 
@@ -139,7 +139,7 @@ async def send_evening_messages():
     await asyncio_wait(
         [
             asyncio.create_task(safe_send_message(c.pk, text, reply_markup=kb))
-            async for c in Client.objects.get_subscribed()
+            async for c in Client.objects.get_subscribed(exclude_survey_unfilled=True,)
         ],
     )
 

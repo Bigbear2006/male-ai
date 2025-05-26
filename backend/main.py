@@ -18,6 +18,7 @@ async def main():
         faq,
         habits,
         profile,
+        schedule,
         sos_button,
         start,
         subscribe,
@@ -39,6 +40,7 @@ async def main():
         habits.router,
         courses.router,
         challenges.router,
+        schedule.router,
         faq.router,
         tests.router,
     )

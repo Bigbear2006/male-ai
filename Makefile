@@ -11,6 +11,12 @@ env:
 run:
 	docker-compose up --build -d
 
+restart:
+	docker-compose restart bot
+
+rebuild:
+	docker-compose up --build -d --no-deps bot
+
 logs:
 	docker-compose logs -f bot
 
@@ -20,3 +26,6 @@ migrate:
 
 admin:
 	docker-compose exec django python manage.py createsuperuser
+
+shell:
+	docker-compose exec django python manage.py shell

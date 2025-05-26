@@ -42,6 +42,13 @@ class DailyCycleState(StatesGroup):
     evening_wellbeing = State()
 
 
+class ScheduleState(StatesGroup):
+    time_block_name = State()
+    time_block_start = State()
+    time_block_end = State()
+    time_block_edit = State()
+
+
 class SosButtonState(StatesGroup):
     problem = State()
 
