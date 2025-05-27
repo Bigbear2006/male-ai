@@ -8,12 +8,12 @@ from aiogram.types import CallbackQuery, Message
 
 from bot import ai
 from bot.greetings import greetings
-from bot.keyboards.inline import ages_kb, self_ratings_kb
-from bot.keyboards.utils import (
+from bot.keyboards.survey import (
+    ages_kb,
     get_energy_directions_kb,
-    keyboard_from_choices,
-    one_button_keyboard,
+    self_ratings_kb,
 )
+from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from bot.prompts import state_analysis_prompt
 from bot.states import ProfileState, SurveyState
 from core.choices import (
@@ -148,7 +148,7 @@ async def set_purpose(query: CallbackQuery, state: FSMContext):
     await state.update_data(purpose=query.data)
     await state.set_state(SurveyState.future_version)
     await query.message.edit_text(
-        'Кем ты хочешь стать через 30 дней? Опиши в 1-2 фразах.',
+        'Чего хочешь достигнуть через 30 дней? Опиши в 1-2 фразах.',
         reply_markup=None,
     )
 
@@ -186,8 +186,8 @@ async def set_support_option(query: CallbackQuery, state: FSMContext):
 @router.message(F.text, StateFilter(SurveyState.key_quality))
 async def set_key_quality(msg: Message, state: FSMContext):
     data = await state.get_data()
-    survey = await Survey.objects.acreate(
-        client_id=msg.chat.id,
+    survey = await Survey.objects.create_or_update(
+        msg.chat.id,
         preferred_name=data['preferred_name'],
         age=data['age'],
         shape=data['shape'],

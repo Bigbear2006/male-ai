@@ -2,7 +2,7 @@ from aiogram import F, Router, flags
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 
-from bot.keyboards.inline import menu_kb, start_kb
+from bot.keyboards.start import menu_kb, start_kb
 from bot.keyboards.utils import one_button_keyboard
 from bot.loader import logger
 from core.models import Client

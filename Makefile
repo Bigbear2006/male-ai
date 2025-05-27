@@ -36,3 +36,8 @@ load:
 dump:
 	docker-compose exec django python manage.py dumpdata -o data.json --indent 2 \
 	core.course core.challenge core.challengetask core.challengetaskquestion
+
+lint:
+	ruff format
+	ruff check --fix
+	ruff format

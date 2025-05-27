@@ -20,7 +20,13 @@ from core.choices import (
     SupportStyle,
     UpgradeStyle,
 )
-from core.managers import ClientManager, DailyCycleManager
+from core.managers import (
+    ClientManager,
+    DailyCycleManager,
+    ProfileManager,
+    ScheduleManager,
+    SurveyManager,
+)
 
 
 def strftime(__time: time):
@@ -123,7 +129,7 @@ class Survey(models.Model):
         choices=Purpose,
     )
     future_version = models.CharField(
-        'Кем хочет стать через 30 дней',
+        'Чего хочет достигнуть через 30 дней',
         max_length=255,
     )
     support_style = models.CharField(
@@ -140,6 +146,7 @@ class Survey(models.Model):
         'Качество, которое хочется усилить',
         max_length=255,
     )
+    objects = SurveyManager()
 
     class Meta:
         verbose_name = 'Анкета'
@@ -161,7 +168,7 @@ class Survey(models.Model):
             f'Насколько доволен собой сейчас (1-10): {self.self_rating}\n'
             f'Куда чаще всего уходит энергия: {energy_directions}\n'
             f'Что сейчас важнее всего: {Purpose(self.purpose).label}\n'
-            f'Кем хочет стать через 30 дней: {self.future_version}\n'
+            f'Чего хочет достигнуть через 30 дней: {self.future_version}\n'
             f'Стиль поддержки: {SupportStyle(self.support_style).label}\n'
             f'Что больше помогает, когда что-то идет не так: '
             f'{SupportOption(self.support_option).label}'
@@ -177,12 +184,16 @@ class Profile(models.Model):
     )
     start_point = models.TextField('Точка старта')
     month_goal = models.TextField('Цель на 30 дней')
-    growth_zones = models.CharField('Зоны роста', max_length=255)
+    growth_zones = models.CharField(
+        'В каких сферах жизни хотел бы прокачаться',
+        max_length=255,
+    )
     upgrade_style = models.CharField(
         'Стиль прокачки',
         max_length=20,
         choices=UpgradeStyle,
     )
+    objects = ProfileManager()
 
     class Meta:
         verbose_name = 'Профиль 1.0'
@@ -195,7 +206,7 @@ class Profile(models.Model):
     def info(self):
         return (
             f'Цель на 30 дней: {self.month_goal}\n'
-            f'Зоны роста: {self.growth_zones}\n'
+            f'В каких сферах жизни хотел бы прокачаться: {self.growth_zones}\n'
             f'Стиль прокачки: {UpgradeStyle(self.upgrade_style).label}'
         )
 
@@ -312,13 +323,14 @@ class Schedule(models.Model):
         max_length=255,
         choices=ScheduleType,
     )
+    objects = ScheduleManager()
 
     class Meta:
         verbose_name = 'Режим дня'
         verbose_name_plural = 'Режимы дня'
 
     def __str__(self):
-        return self.client
+        return str(self.client)
 
     @property
     def message_text(self):

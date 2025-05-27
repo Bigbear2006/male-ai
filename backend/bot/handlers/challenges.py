@@ -44,16 +44,23 @@ async def challenge_detail(query: CallbackQuery):
 
 @router.callback_query(F.data.startswith('join_challenge'))
 async def join_challenge(query: CallbackQuery):
+    kb = one_button_keyboard(text='Назад', callback_data='challenges')
     try:
         await ClientChallenge.objects.acreate(
             client_id=query.message.chat.id,
             challenge_id=query.data.split(':')[1],
         )
     except IntegrityError:
-        await query.message.reply('Ты уже участвуешь в этом челлендже')
+        await query.message.reply(
+            'Ты уже участвуешь в этом челлендже',
+            reply_markup=kb,
+        )
         return
 
-    await query.message.reply('Теперь ты участвуешь в этом челлендже')
+    await query.message.reply(
+        'Теперь ты участвуешь в этом челлендже',
+        reply_markup=kb,
+    )
 
 
 @router.callback_query(F.data.startswith('answer_challenge_task_questions'))

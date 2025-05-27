@@ -5,7 +5,7 @@ from aiogram.types import CallbackQuery, Message
 from django.utils.timezone import now
 
 from bot import ai
-from bot.keyboards.inline import wellbeing_kb
+from bot.keyboards.daily_cycle import wellbeing_kb
 from bot.prompts import evening_support_prompt, morning_extended_message_prompt
 from bot.states import DailyCycleState
 from core.choices import ManifestType

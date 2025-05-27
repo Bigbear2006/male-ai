@@ -1,4 +1,4 @@
-from bot.keyboards.utils import get_greeting_kb
+from bot.keyboards.greetings import get_greeting_kb
 
 greetings = [
     {

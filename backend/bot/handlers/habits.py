@@ -3,12 +3,8 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot.keyboards.inline import habits_menu_kb
-from bot.keyboards.utils import (
-    get_habit_kb,
-    get_habits_kb,
-    one_button_keyboard,
-)
+from bot.keyboards.habits import get_habit_kb, get_habits_kb, habits_menu_kb
+from bot.keyboards.utils import one_button_keyboard
 from bot.states import HabitState
 from core.models import Habit
 

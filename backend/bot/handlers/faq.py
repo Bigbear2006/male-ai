@@ -2,7 +2,6 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
 from bot.config import config
-from bot.keyboards.inline import back_to_start_kb
 from bot.keyboards.utils import one_button_keyboard
 
 router = Router()

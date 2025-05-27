@@ -3,21 +3,26 @@ import functools
 
 from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter
 from celery import shared_task
-from celery.utils.log import task_logger
+from celery.utils.log import get_task_logger
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Max
+from django.utils.timezone import now
 
 from bot import ai
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from bot.loader import bot
-from bot.prompts import morning_message_prompt
+from bot.prompts import day_message_prompt, morning_message_prompt
+from bot.time_utils import current_time
 from core.choices import ManifestType
 from core.models import (
     ChallengeTask,
     Client,
     ClientChallenge,
     ClientChallengeTaskQuestion,
+    TimeBlock,
 )
+
+task_logger = get_task_logger(__name__)
 
 
 def handle_send_message_errors(send_message_func):
@@ -124,7 +129,33 @@ async def send_morning_messages():
     await asyncio_wait(
         [
             asyncio.create_task(safe_send_message(c.pk, text, reply_markup=kb))
-            async for c in Client.objects.get_subscribed(exclude_survey_unfilled=True,)
+            async for c in Client.objects.get_subscribed(
+                exclude_survey_unfilled=True,
+            )
+        ],
+    )
+
+
+async def send_day_message(client: Client):
+    text = await ai.answer(await day_message_prompt(client))
+    await safe_send_message(client.pk, text)
+
+
+@async_shared_task
+async def send_day_messages():
+    hour = current_time().hour
+    await asyncio_wait(
+        [
+            asyncio.create_task(send_day_message(c))
+            async for c in TimeBlock.objects.filter(
+                start_time__hour=hour,
+                schedule__client__subscription__gte=now(),
+                schedule__client__survey__isnull=False,
+                schedule__client__profile__isnull=False,
+            )
+            .values_list('client', flat=True)
+            .order_by()
+            .distinct()
         ],
     )
 
@@ -139,7 +170,9 @@ async def send_evening_messages():
     await asyncio_wait(
         [
             asyncio.create_task(safe_send_message(c.pk, text, reply_markup=kb))
-            async for c in Client.objects.get_subscribed(exclude_survey_unfilled=True,)
+            async for c in Client.objects.get_subscribed(
+                exclude_survey_unfilled=True,
+            )
         ],
     )
 

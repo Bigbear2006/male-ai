@@ -2,7 +2,7 @@ from aiogram import F, Router, flags
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
-from bot.keyboards.inline import back_to_start_kb
+from bot.keyboards.start import back_to_start_kb
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from core.choices import Priority, SpendTime
 from core.models import Client

@@ -1,13 +1,15 @@
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from aiogram import types
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.timezone import now
 
+from core.choices import ScheduleType
+
 if TYPE_CHECKING:
-    from core.models import Client
+    from core.models import Client, Profile, Schedule, Survey
 
 
 class ClientManager(models.Manager):
@@ -40,7 +42,7 @@ class ClientManager(models.Manager):
         except ObjectDoesNotExist:
             return await self.from_tg_user(user), True
 
-    async def update_by_id(self, pk: int, **kwargs):
+    async def update_by_id(self, pk: int | str, **kwargs):
         await self.filter(pk=pk).aupdate(**kwargs)
 
     def get_subscribed(self, *, exclude_survey_unfilled: bool = False):
@@ -62,13 +64,57 @@ class ClientManager(models.Manager):
         return qs
 
 
+class SurveyManager(models.Manager):
+    async def create_or_update(
+        self,
+        client_id: int | str,
+        **defaults,
+    ) -> 'Survey':
+        survey, _ = await self.aupdate_or_create(
+            defaults,
+            {**defaults, 'client_id': client_id},
+            client_id=client_id,
+        )
+        return survey
+
+
+class ProfileManager(models.Manager):
+    async def create_or_update(
+        self,
+        client_id: int | str,
+        **defaults,
+    ) -> 'Profile':
+        profile, _ = await self.aupdate_or_create(
+            defaults,
+            {**defaults, 'client_id': client_id},
+            client_id=client_id,
+        )
+        return profile
+
+
 class DailyCycleManager(models.Manager):
-    def get_current_week(self, client_id: int):
-        today = now().date()
-        first_week_day = today - timedelta(days=today.weekday())
-        last_week_day = first_week_day + timedelta(days=6)
+    def get_recent_cycles(self, client_id: int, days: int = 7):
         return self.filter(
             client_id=client_id,
-            created_at__date__gte=first_week_day,
-            created_at__date__lte=last_week_day,
+            created_at__date__gte=now().date() - timedelta(days=days),
         )
+
+
+class ScheduleManager(models.Manager):
+    async def get_by_id(self, pk: int | str) -> Optional['Schedule']:
+        try:
+            return await self.prefetch_related('time_blocks').aget(pk=pk)
+        except ObjectDoesNotExist:
+            return
+
+    async def create_or_update(
+        self,
+        client_id: int | str,
+        schedule_type: ScheduleType,
+    ) -> 'Schedule':
+        schedule, _ = await self.aupdate_or_create(
+            {'schedule_type': schedule_type},
+            {'schedule_type': schedule_type, 'client_id': client_id},
+            client_id=client_id,
+        )
+        return schedule

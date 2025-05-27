@@ -1,6 +1,7 @@
 import os.path
 from pathlib import Path
 
+from celery.schedules import crontab
 from environs import env
 
 env.read_env()
@@ -178,12 +179,12 @@ LOGGING = {
     },
     'loggers': {
         'bot': {
-            'handlers': ['console'],
+            'handlers': ['bot_file', 'console'],
             'level': 'INFO',
             'propagate': False,
         },
         'django': {
-            'handlers': ['console'],
+            'handlers': ['django_file', 'console'],
             'level': 'INFO',
             'propagate': False,
         },
@@ -199,3 +200,38 @@ CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
+
+CELERY_BEAT_SCHEDULE = {
+    'send_free_morning_messages': {
+        'task': 'core.tasks.send_free_morning_messages',
+        'schedule': crontab(minute='0', hour='8'),
+    },
+    'send_free_evening_messages': {
+        'task': 'core.tasks.send_free_evening_messages',
+        'schedule': crontab(minute='0', hour='20'),
+    },
+    'send_subscription_notifications': {
+        'task': 'core.tasks.send_subscription_notifications',
+        'schedule': crontab(minute='0', hour='14', day_of_week='1'),
+    },
+    'send_morning_messages': {
+        'task': 'core.tasks.send_morning_messages',
+        'schedule': crontab(minute='0', hour='8'),
+    },
+    'send_day_messages': {
+        'task': 'core.tasks.send_day_messages',
+        'schedule': crontab(minute='0', hour='*'),
+    },
+    'send_evening_messages': {
+        'task': 'core.tasks.send_evening_messages',
+        'schedule': crontab(minute='0', hour='20'),
+    },
+    'send_challenge_tasks': {
+        'task': 'core.tasks.send_challenge_tasks',
+        'schedule': crontab(minute='0', hour='10'),
+    },
+    'send_challenge_tasks_questions': {
+        'task': 'core.tasks.send_challenge_tasks_questions',
+        'schedule': crontab(minute='0', hour='18'),
+    },
+}

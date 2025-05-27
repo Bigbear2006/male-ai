@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from bot import ai
-from bot.keyboards.inline import menu_kb
+from bot.keyboards.start import menu_kb
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from bot.prompts import select_month_goal_prompt
 from bot.states import ProfileState
@@ -51,7 +51,7 @@ async def set_month_goal(msg: Message | CallbackQuery, state: FSMContext):
     await state.update_data(month_goal=month_goal)
     await state.set_state(ProfileState.growth_zones)
     await answer_func(
-        text='Напиши 2-3 зоны роста - ключевые фокусы.',
+        text='Напиши в каких сферах жизни хотел бы прокачаться.',
         reply_markup=None,
     )
 
@@ -69,8 +69,8 @@ async def set_growth_zones(msg: Message, state: FSMContext):
 @router.callback_query(StateFilter(ProfileState.upgrade_style))
 async def set_upgrade_style(query: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    await Profile.objects.acreate(
-        client_id=query.message.chat.id,
+    await Profile.objects.create_or_update(
+        query.message.chat.id,
         start_point=data['start_point'],
         month_goal=data['month_goal'],
         growth_zones=data['growth_zones'],

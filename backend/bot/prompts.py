@@ -1,8 +1,12 @@
-from asgiref.sync import sync_to_async
-
+from bot.client_info import (
+    get_client_info,
+    get_cycles_info,
+    get_habits_info,
+    get_schedule_info,
+)
+from bot.time_utils import current_time
 from core.choices import ManifestType
-from core.models import Client, Habit, Profile, Survey
-from core.utils import get_current_week_cycles_info
+from core.models import Client, Survey
 
 BASE_INSTRUCTIONS = (
     'ВАЖНО:\nОбращайся прямо к этому человеку.\nНе нужно ставить ** и ###\n'
@@ -39,29 +43,30 @@ async def morning_extended_message_prompt(
     client: Client,
     manifest_type: ManifestType,
 ):
-    survey = await Survey.objects.aget(pk=client.pk)
-    profile = await Profile.objects.aget(pk=client.pk)
-    cycles = await get_current_week_cycles_info(client.pk)
-    habits = await sync_to_async(
-        lambda: list(
-            Habit.objects.filter(client=client).values_list('name', flat=True),
-        ),
-    )()
-
+    info = await get_client_info(client.pk)
     return (
         f'Напиши настрой дня и микро-цель '
-        f'по следующим данным пользователя:\n'
-        f'{survey.info}\n\n'
-        f'Профиль:\n{profile.info}\n\n'
-        f'Привычки:\n{", ".join(habits)}\n\n'
-        f'Дневник пользователя:\n{cycles}\n\n'
+        f'по следующим данным пользователя:\n{info}'
         f'Как хочет проявиться сегодня: {manifest_type.label}'
         f'{BASE_INSTRUCTIONS}'
     )
 
 
+async def day_message_prompt(client: Client):
+    schedule = await get_schedule_info(client.pk)
+    habits = await get_habits_info(client.pk)
+    return (
+        f'Напиши пользователю что-нибудь мотивирующее,'
+        f'учитывай текущее время и режим дня пользователя. '
+        f'Можешь напомнить ему про привычки\n\n'
+        f'Текущее время: {current_time()}\n'
+        f'Режим пользователя:\n{schedule}\n'
+        f'Привычки:\n{habits}'
+    )
+
+
 async def evening_support_prompt(client: Client):
-    cycles = await get_current_week_cycles_info(client.pk)
+    cycles = await get_cycles_info(client.pk)
     return (
         f'Вот дневник пользователя за эту неделю:\n{cycles}'
         f'Поддержи его\n\n{BASE_INSTRUCTIONS}'
@@ -79,6 +84,18 @@ def select_overload_method(user_msg: str):
         '- быстрое микро-действие'
         '- перенаправление внимания'
         '- эмоциональная выгрузка'
+        f'{BASE_INSTRUCTIONS}'
+    )
+
+
+def get_sos_help():
+    return (
+        'Пользователь описывает ситуацию, а ты даёшь совет — '
+        'далее просишь написать, например, "Опиши что ты сейчас чувствуешь" — '
+        'и далее так-же ведёшь диалог.\n'
+        'Тебе нужно нужно закончить диалог за 3 сообщения.'
+        'В 1 и 2 сообщении задавай вопросы для уточнения, '
+        'а в третьем подводи итог и завершай.\n'
         f'{BASE_INSTRUCTIONS}'
     )
 

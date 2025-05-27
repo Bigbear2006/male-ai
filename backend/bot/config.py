@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from zoneinfo import ZoneInfo
 
 from environs import env
 
@@ -16,6 +17,7 @@ class Config:
     CURRENCY: str = field(default='RUB')
     PAGE_SIZE: int = field(default=5)
     TIME_FMT: str = field(default='%H:%M')
+    TZ: ZoneInfo = field(default=ZoneInfo('Europe/Moscow'))
 
 
 config = Config()
