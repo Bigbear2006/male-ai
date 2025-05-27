@@ -4,7 +4,7 @@ from core.models import DailyCycle, Habit, Profile, Schedule, Survey
 
 
 async def get_cycles_info(client_id: int, days: int = 7):
-    cycles = await DailyCycle.objects.get_recent_cycles(client_id, days)
+    cycles = DailyCycle.objects.get_recent_cycles(client_id, days)
     return '\n\n'.join([i.info async for i in cycles])
 
 

@@ -100,22 +100,27 @@ def get_sos_help():
     )
 
 
-def week_report_prompt():
+async def week_report_prompt(client_id: int | str):
+    cycles_info = await get_cycles_info(client_id)
     return (
         'Сформируй еженедельный мини-отчёт для пользователя:\n'
         '- сколько задач закрыл\n'
         '- в каких зонах есть рост\n'
-        '- частые состояния'
+        '- частые состояния\n'
+        f'Дневник пользователя:\n{cycles_info}\n'
         f'{BASE_INSTRUCTIONS}'
     )
 
 
-def month_report_prompt():
+async def month_report_prompt(client_id: int | str):
+    cycles_info = await get_cycles_info(client_id, days=30)
     return (
-        'Сформируй еженедельный мини-отчёт для пользователя:\n'
+        'Сформируй месячный отчёт для пользователя:\n'
         '- сравни, где он был и где он сейчас\n'
         '- проанализируй стабильность, фокус, привычки\n'
         '- подскажи, что мешает, а что работает\n'
         '- можешь предложить обновить цели и стиль '
         '(мягкий/жёсткий/адаптивный)\n'
+        f'Дневник пользователя:\n{cycles_info}\n'
+        f'{BASE_INSTRUCTIONS}'
     )

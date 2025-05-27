@@ -84,19 +84,15 @@ async def set_evening_wellbeing(
     client: Client,
 ):
     data = await state.get_data()
-    defaults = {
-        'success_result': data['success_result'],
-        'fail_result': data['fail_result'],
-        'feelings': data['feelings'],
-        'evening_wellbeing': query.data,
-    }
-
-    await DailyCycle.objects.aupdate_or_create(
-        defaults,
-        created_at__date=now().date(),
-        client_id=query.message.chat.id,
+    await DailyCycle.objects.create_or_update(
+        query.message.chat.id,
+        success_result=data['success_result'],
+        fail_result=data['fail_result'],
+        feelings=data['feelings'],
+        evening_wellbeing=query.data,
     )
 
+    await query.message.edit_text('Сохраняю данные...')
     text = await ai.answer(await evening_support_prompt(client))
     await state.clear()
     await query.message.edit_text(text)

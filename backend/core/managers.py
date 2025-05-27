@@ -99,6 +99,19 @@ class DailyCycleManager(models.Manager):
             created_at__date__gte=now().date() - timedelta(days=days),
         )
 
+    async def create_or_update(
+        self,
+        client_id: int | str,
+        **defaults,
+    ) -> 'Profile':
+        cycle, _ = await self.aupdate_or_create(
+            defaults,
+            {**defaults, 'client_id': client_id},
+            client_id=client_id,
+            created_at__date=now().date(),
+        )
+        return cycle
+
 
 class ScheduleManager(models.Manager):
     async def get_by_id(self, pk: int | str) -> Optional['Schedule']:
