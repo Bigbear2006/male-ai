@@ -136,9 +136,9 @@ async def send_morning_messages():
     )
 
 
-async def send_day_message(client: Client):
-    text = await ai.answer(await day_message_prompt(client))
-    await safe_send_message(client.pk, text)
+async def send_day_message(client_id: int | str):
+    text = await ai.answer(await day_message_prompt(client_id))
+    await safe_send_message(client_id, text)
 
 
 @async_shared_task
@@ -149,11 +149,11 @@ async def send_day_messages():
             asyncio.create_task(send_day_message(c))
             async for c in TimeBlock.objects.filter(
                 start_time__hour=hour,
-                schedule__client__subscription__gte=now(),
+                schedule__client__subscription_end__gte=now(),
                 schedule__client__survey__isnull=False,
                 schedule__client__profile__isnull=False,
             )
-            .values_list('client', flat=True)
+            .values_list('schedule__client', flat=True)
             .order_by()
             .distinct()
         ],

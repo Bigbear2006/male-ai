@@ -52,9 +52,9 @@ async def morning_extended_message_prompt(
     )
 
 
-async def day_message_prompt(client: Client):
-    schedule = await get_schedule_info(client.pk)
-    habits = await get_habits_info(client.pk)
+async def day_message_prompt(client_id: int | str):
+    schedule = await get_schedule_info(client_id)
+    habits = await get_habits_info(client_id)
     return (
         f'Напиши пользователю что-нибудь мотивирующее,'
         f'учитывай текущее время и режим дня пользователя. '

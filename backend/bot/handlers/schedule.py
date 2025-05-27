@@ -133,6 +133,7 @@ async def edit_time_block_field_2(msg: Message, state: FSMContext):
         await validate_time(msg)
 
     await TimeBlock.objects.filter(pk=pk).aupdate(**{field: msg.text})
+    await state.clear()
     await msg.answer(
         'Блок изменён!',
         reply_markup=one_button_keyboard(
