@@ -74,7 +74,7 @@ async def asyncio_wait(
 
 
 async def send_free_morning_message(client: Client):
-    text = await ai.answer(morning_message_prompt(client))
+    text = await ai.answer(await morning_message_prompt(client))
     await safe_send_message(client.pk, text)
 
 
@@ -179,11 +179,11 @@ async def send_evening_messages():
 
 async def send_challenge_task(client_challenge: ClientChallenge):
     last_day = (
-        await ClientChallengeTaskQuestion.objects.filter(
-            client_id=client_challenge.client_id,
-            question__task__challenge_id=client_challenge.challenge_id,
-        ).aaggregate(last_day=Max('question__task__day', default=0))
-    )['last_day']
+        await ClientChallengeTaskQuestion.objects.get_last_completed_day(
+            client_challenge.client_id,
+            client_challenge.challenge_id,
+        )
+    )
 
     try:
         task = await ChallengeTask.objects.select_related('challenge').aget(
@@ -208,11 +208,11 @@ async def send_challenge_tasks():
 
 async def send_challenge_task_questions(client_challenge: ClientChallenge):
     last_day = (
-        await ClientChallengeTaskQuestion.objects.filter(
-            client_id=client_challenge.client_id,
-            question__task__challenge_id=client_challenge.challenge_id,
-        ).aaggregate(last_day=Max('question__task__day', default=0))
-    )['last_day']
+        await ClientChallengeTaskQuestion.objects.get_last_completed_day(
+            client_challenge.client_id,
+            client_challenge.challenge_id,
+        )
+    )
 
     try:
         task = await ChallengeTask.objects.prefetch_related('questions').aget(

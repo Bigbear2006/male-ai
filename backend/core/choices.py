@@ -59,3 +59,32 @@ class ScheduleType(TextChoices):
     BASIC = 'basic', 'Базовый'
     FOCUS = 'focus', 'Фокусный'
     HARD = 'hard', 'Жёсткий'
+
+
+class PromptType(TextChoices):
+    STATE_ANALYSIS = 'state_analysis', 'Анализ состояния'
+    SELECT_MONTH_GOAL = 'select_month_goal', 'Выбор цели на 30 дней'
+    MORNING_MESSAGE = 'morning_message', 'Утреннее сообщение'
+    MORNING_EXTENDED_MESSAGE = (
+        'morning_extended_message',
+        'Утреннее сообщение (для платного тарифа)',
+    )
+    DAY_MESSAGE = 'day_message', 'Сообщение днем'
+    EVENING_SUPPORT = 'evening_support', 'Сообщение-поддержка вечером'
+    SELECT_OVERLOAD_METHOD = 'select_overload_method', 'SOS Кнопка'
+    GET_SOS_HELP = 'get_sos_help', 'SOS Кнопка (для платного тарифа)'
+    WEEK_REPORT = 'week_report', 'Еженедельный отчет'
+    MONTH_REPORT = 'month_report', 'Ежемесячный отчет'
+
+
+class AchievementType(TextChoices):
+    CHALLENGE_COMPLETED = 'challenge_completed', 'Выполнение челленджа'
+    CHALLENGE_TASKS_STREAK = (
+        'challenge_tasks_streak',
+        'Выполнение задач челленджа подряд',
+    )
+    SOS_BUTTON_USAGE = 'sos_button_usage', 'Использование SOS Кнопки'
+    START_CHALLENGE = 'start_challenge', 'Начать челлендж'
+    DAILY_CYCLES_STREAK = 'daily_cycles_streak', 'Вести дневник'
+    BOT_USAGE = 'bot_usage', 'Использование бота'
+    ACHIEVEMENTS_COLLECTION = 'achievements_collection', 'Получение достижений'

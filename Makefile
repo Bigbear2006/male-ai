@@ -1,4 +1,4 @@
-all: run
+all: up
 
 env:
 	@if [ ! -f .env ]; then \
@@ -8,8 +8,11 @@ env:
         echo ".env already exists."; \
     fi
 
-run:
+up:
 	docker-compose up --build -d
+
+down:
+	docker-compose down
 
 restart:
 	docker-compose restart bot
@@ -35,9 +38,12 @@ load:
 
 dump:
 	docker-compose exec django python manage.py dumpdata -o data.json --indent 2 \
-	core.course core.challenge core.challengetask core.challengetaskquestion
+	core.course core.challenge core.challengetask core.challengetaskquestion core.prompt core.achievement
 
 lint:
 	ruff format
 	ruff check --fix
 	ruff format
+
+check:
+	ruff check

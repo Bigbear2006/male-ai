@@ -201,7 +201,7 @@ CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
 
-CELERY_BEAT_SCHEDULE = {
+__CELERY_BEAT_SCHEDULE = {
     'send_free_morning_messages': {
         'task': 'core.tasks.send_free_morning_messages',
         'schedule': crontab(minute='0', hour='8'),

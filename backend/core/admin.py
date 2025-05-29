@@ -7,6 +7,8 @@ admin.site.unregister(Group)
 
 admin.site.register(models.Course)
 admin.site.register(models.ChallengeTaskQuestion)
+admin.site.register(models.Prompt)
+admin.site.register(models.Achievement)
 
 
 class ChallengeTaskInline(admin.StackedInline):

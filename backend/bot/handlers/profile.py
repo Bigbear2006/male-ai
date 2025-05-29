@@ -23,7 +23,7 @@ async def set_month_goal_with_ai(query: CallbackQuery, state: FSMContext):
         f'{query.message.text}\n\nВыбираю подходящую цель...',
     )
     survey = await Survey.objects.aget(pk=query.message.chat.id)
-    month_goal = await ai.answer(select_month_goal_prompt(survey))
+    month_goal = await ai.answer(await select_month_goal_prompt(survey))
     await state.update_data(month_goal=month_goal)
     await query.message.edit_text(
         f'ИИ предлагает цель:\n{month_goal}\n\n'
@@ -51,7 +51,7 @@ async def set_month_goal(msg: Message | CallbackQuery, state: FSMContext):
     await state.update_data(month_goal=month_goal)
     await state.set_state(ProfileState.growth_zones)
     await answer_func(
-        text='Напиши в каких сферах жизни хотел бы прокачаться.',
+        text='В каких сферах жизни ты хотел бы прокачаться?',
         reply_markup=None,
     )
 

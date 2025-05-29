@@ -10,9 +10,11 @@ from django.utils.timezone import now
 
 from bot.config import config
 from core.choices import (
+    AchievementType,
     EnergyDirection,
     ManifestType,
     Priority,
+    PromptType,
     Purpose,
     ScheduleType,
     SpendTime,
@@ -21,7 +23,12 @@ from core.choices import (
     UpgradeStyle,
 )
 from core.managers import (
+    ChallengeTaskManager,
+    ClientAchievementManager,
+    ClientChallengeManager,
+    ClientChallengeTaskQuestionManager,
     ClientManager,
+    ClientSosButtonUsageManager,
     DailyCycleManager,
     ProfileManager,
     ScheduleManager,
@@ -92,6 +99,9 @@ class Client(models.Model):
             return await Profile.objects.aget(pk=self.pk)
         except ObjectDoesNotExist:
             return
+
+    def get_bot_usage_days(self):
+        return (now() - self.created_at).total_seconds() / 86400
 
     @property
     def info(self):
@@ -413,6 +423,7 @@ class ChallengeTask(models.Model):
     )
     title = models.TextField('Задание')
     setup = models.TextField('Установка')
+    objects = ChallengeTaskManager()
 
     class Meta:
         unique_together = ('challenge', 'day')
@@ -464,7 +475,13 @@ class ClientChallenge(models.Model):
         'clients',
         verbose_name='Челлендж',
     )
+    completed_at = models.DateTimeField(
+        'Дата завершения',
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField('Дата', auto_now_add=True)
+    objects = ClientChallengeManager()
 
     class Meta:
         unique_together = ('client', 'challenge')
@@ -489,6 +506,7 @@ class ClientChallengeTaskQuestion(models.Model):
     )
     answer = models.CharField('Ответ', max_length=255)
     created_at = models.DateTimeField('Дата', auto_now_add=True)
+    objects = ClientChallengeTaskQuestionManager()
 
     class Meta:
         unique_together = ('client', 'question')
@@ -498,3 +516,90 @@ class ClientChallengeTaskQuestion(models.Model):
 
     def __str__(self):
         return f'{self.client} - {self.answer}'
+
+
+class Prompt(models.Model):
+    prompt_type = models.CharField(
+        'Тип промпта',
+        max_length=100,
+        choices=PromptType,
+        unique=True,
+    )
+    text = models.TextField('Текст')
+
+    class Meta:
+        verbose_name = 'Промпт'
+        verbose_name_plural = 'Промпты'
+
+    def __str__(self):
+        return PromptType(self.prompt_type).label
+
+
+class Achievement(models.Model):
+    achievement_type = models.CharField(
+        'Тип достижения',
+        max_length=100,
+        choices=AchievementType,
+    )
+    value = models.IntegerField('Значение')
+    title = models.CharField('Название', max_length=255)
+    description = models.CharField('Описание', max_length=255)
+    motivation = models.CharField('Мотивация', max_length=255)
+
+    class Meta:
+        verbose_name = 'Достижение'
+        verbose_name_plural = 'Достижения'
+
+    def __str__(self):
+        return f'{AchievementType(self.achievement_type).label} - {self.value}'
+
+    @property
+    def message_text(self):
+        return (
+            f'Получено новое достижение: "{self.title}"!\n\n{self.motivation}'
+        )
+
+
+class ClientAchievement(models.Model):
+    client = models.ForeignKey(
+        Client,
+        models.CASCADE,
+        'achievements',
+        verbose_name='Пользователь',
+    )
+    achievement = models.ForeignKey(
+        Achievement,
+        models.CASCADE,
+        'clients',
+        verbose_name='Достижение',
+    )
+    created_at = models.DateTimeField('Дата создания', auto_now_add=True)
+    objects = ClientAchievementManager()
+
+    class Meta:
+        unique_together = ('client', 'achievement')
+        verbose_name = 'Достижение пользователя'
+        verbose_name_plural = 'Достижения пользователей'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.client} - {self.achievement}'
+
+
+class ClientSosButtonUsage(models.Model):
+    client = models.ForeignKey(
+        Client,
+        models.CASCADE,
+        'sos_button_usages',
+        verbose_name='Пользователь',
+    )
+    created_at = models.DateTimeField('Дата создания', auto_now_add=True)
+    objects = ClientSosButtonUsageManager()
+
+    class Meta:
+        verbose_name = 'Нажатие SOS Кнопки'
+        verbose_name_plural = 'Нажатия SOS Кнопки'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'[{self.created_at}] {self.client}'

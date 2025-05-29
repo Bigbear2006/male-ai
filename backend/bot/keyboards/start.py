@@ -41,6 +41,12 @@ menu_kb = InlineKeyboardMarkup(
         [InlineKeyboardButton(text='Челленджи', callback_data='challenges')],
         [
             InlineKeyboardButton(
+                text='Достижения',
+                callback_data='achievements',
+            ),
+        ],
+        [
+            InlineKeyboardButton(
                 text='Микро-курсы / интенсивы',
                 callback_data='courses',
             ),

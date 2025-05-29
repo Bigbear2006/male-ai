@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Optional
 
 from aiogram import types
+from asgiref.sync import sync_to_async
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.timezone import now
@@ -112,6 +113,9 @@ class DailyCycleManager(models.Manager):
         )
         return cycle
 
+    async def get_count(self, client_id: int | str):
+        return await self.filter(client_id=client_id).acount()
+
 
 class ScheduleManager(models.Manager):
     async def get_by_id(self, pk: int | str) -> Optional['Schedule']:
@@ -131,3 +135,79 @@ class ScheduleManager(models.Manager):
             client_id=client_id,
         )
         return schedule
+
+
+class ChallengeTaskManager(models.Manager):
+    async def get_last_day(self, challenge_id: int | str) -> int:
+        return (
+            await self.filter(challenge_id=challenge_id).aaggregate(
+                last_day=models.Max(
+                    'day',
+                    filter=models.Q(questions__isnull=False),
+                    default=0,
+                ),
+            )
+        )['last_day']
+
+
+class ClientChallengeManager(models.Manager):
+    def get_completed(self, client_id: int | str):
+        return self.filter(client_id=client_id, completed_at__isnull=False)
+
+    async def get_completed_count(self, client_id: int | str) -> int:
+        return await self.get_completed(client_id).acount()
+
+    async def get_started_count(self, client_id: int | str):
+        return await self.filter(client_id=client_id).acount()
+
+
+class ClientChallengeTaskQuestionManager(models.Manager):
+    async def create_or_update(self, client_id: int | str, **defaults):
+        task, _ = await self.aupdate_or_create(
+            defaults,
+            {**defaults, 'client_id': client_id},
+            client_id=client_id,
+        )
+        return task
+
+    async def get_last_completed_day(
+        self,
+        client_id: int | str,
+        challenge_id: int | str,
+    ) -> int:
+        return (
+            await self.filter(
+                client_id=client_id,
+                question__task__challenge_id=challenge_id,
+            ).aaggregate(last_day=models.Max('question__task__day', default=0))
+        )['last_day']
+
+    async def get_streak(self, client_id: int | str) -> int:
+        days = await sync_to_async(
+            lambda: list(
+                self.filter(client_id=client_id)
+                .values_list('created_at__date', flat=True)
+                .order_by('created_at__date')
+                .distinct('created_at__date'),
+            ),
+        )()
+
+        streak = 0
+        for i, day in enumerate(days):
+            if i == 0:
+                streak += 1
+                continue
+            if (day - days[i - 1]).days > 1:
+                break
+            streak += 1
+        return streak
+
+
+class ClientSosButtonUsageManager(models.Manager):
+    async def get_usages(self, client_id: int | str):
+        return await self.filter(client_id=client_id).acount()
+
+
+class ClientAchievementManager(models.Manager):
+    async def get_count(self, client_id: int | str):
+        return await self.filter(client_id=client_id).acount()

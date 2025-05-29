@@ -4,14 +4,21 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from asgiref.sync import sync_to_async
 from django.db import IntegrityError
+from django.utils.timezone import now
 
+from bot.achievements import (
+    check_challenge_tasks_streak,
+    check_completed_challenges,
+    check_started_challenges,
+)
 from bot.keyboards.utils import keyboard_from_queryset, one_button_keyboard
+from bot.loader import logger
 from bot.states import ChallengeState
 from core.models import (
     Challenge,
     ChallengeTaskQuestion,
     ClientChallenge,
-    ClientChallengeTaskQuestion,
+    ClientChallengeTaskQuestion, ChallengeTask,
 )
 
 router = Router()
@@ -50,6 +57,7 @@ async def join_challenge(query: CallbackQuery):
             client_id=query.message.chat.id,
             challenge_id=query.data.split(':')[1],
         )
+        await check_started_challenges(query.message.chat.id)
     except IntegrityError:
         await query.message.reply(
             'Ты уже участвуешь в этом челлендже',
@@ -68,15 +76,14 @@ async def answer_challenge_task_first_question(
     query: CallbackQuery,
     state: FSMContext,
 ):
+    task_id = query.data.split(':')[1]
     questions = await sync_to_async(
         lambda: list(
-            ChallengeTaskQuestion.objects.filter(
-                task_id=query.data.split(':')[1],
-            ).values('id', 'title'),
+            ChallengeTaskQuestion.objects.filter(task_id=task_id).values('id', 'title'),
         ),
     )()
 
-    await state.update_data(questions=questions, question_index=0)
+    await state.update_data(questions=questions, question_index=0, task_id=task_id)
     await state.set_state(ChallengeState.answer_task_questions)
     await query.message.edit_text(questions[0]['title'])
 
@@ -87,8 +94,8 @@ async def answer_challenge_task_question(msg: Message, state: FSMContext):
     questions = data['questions']
     index = data['question_index']
 
-    await ClientChallengeTaskQuestion.objects.acreate(
-        client_id=msg.chat.id,
+    await ClientChallengeTaskQuestion.objects.create_or_update(
+        msg.chat.id,
         question_id=questions[index]['id'],
         answer=msg.text,
     )
@@ -98,5 +105,17 @@ async def answer_challenge_task_question(msg: Message, state: FSMContext):
         await msg.answer(questions[index + 1]['title'])
         return
 
-    await state.clear()
+    challenge_id = (
+        await ChallengeTask.objects.aget(pk=data['task_id'])
+    ).challenge_id
+
+    await ClientChallenge.objects.filter(
+        client_id=msg.chat.id,
+        challenge_id=challenge_id,
+    ).aupdate(completed_at=now())
+
+    await check_completed_challenges(msg.chat.id)
+    await check_challenge_tasks_streak(msg.chat.id)
+
     await msg.answer('Все ответы записаны!')
+    await state.clear()

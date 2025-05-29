@@ -1,5 +1,6 @@
 from aiogram import F, Router, flags
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from bot.keyboards.start import menu_kb, start_kb
@@ -10,8 +11,10 @@ from core.models import Client
 router = Router()
 
 
-@router.message(Command('start'))
-async def start(msg: Message):
+@router.message(Command('start', 'menu'))
+async def start(msg: Message, state: FSMContext):
+    await state.set_state()
+
     client, created = await Client.objects.create_or_update(msg.from_user)
     if created:
         logger.info(f'New client {client} id={client.pk} was created')

@@ -2,9 +2,9 @@ from aiogram import F, Router, flags
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
-from django.utils.timezone import now
 
 from bot import ai
+from bot.achievements import check_bot_usage_days, check_daily_cycles
 from bot.keyboards.daily_cycle import wellbeing_kb
 from bot.prompts import evening_support_prompt, morning_extended_message_prompt
 from bot.states import DailyCycleState
@@ -94,5 +94,9 @@ async def set_evening_wellbeing(
 
     await query.message.edit_text('Сохраняю данные...')
     text = await ai.answer(await evening_support_prompt(client))
-    await state.clear()
+
+    await check_daily_cycles(client.pk)
+    await check_bot_usage_days(client)
+
     await query.message.edit_text(text)
+    await state.clear()
