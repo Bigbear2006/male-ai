@@ -211,7 +211,7 @@
     "achievement_type": "sos_button_usage",
     "value": 1,
     "title": "Позвал на помощь",
-    "description": "1 нажатие",
+    "description": "1 использование SOS Кнопки",
     "motivation": "Признать трудность — это уже бой."
   }
 },
@@ -222,7 +222,7 @@
     "achievement_type": "sos_button_usage",
     "value": 3,
     "title": "Лицом к шторму",
-    "description": "3 Нажатия",
+    "description": "3 использования SOS Кнопки",
     "motivation": "Ты идёшь туда, где шторм, не убегаешь."
   }
 },
@@ -233,7 +233,7 @@
     "achievement_type": "sos_button_usage",
     "value": 5,
     "title": "Знаешь, когда собраться",
-    "description": "5 нажатий",
+    "description": "5 использований SOS Кнопки",
     "motivation": "Сила не в том, чтобы не падать. Сила — подниматься."
   }
 },
@@ -244,7 +244,7 @@
     "achievement_type": "challenge_completed",
     "value": 1,
     "title": "Начал Путь",
-    "description": "Первое выполнение челленджа",
+    "description": "первое выполнение челленджа",
     "motivation": "Вышел из берлоги. Всё начинается с шага"
   }
 },
@@ -266,7 +266,7 @@
     "achievement_type": "start_challenge",
     "value": 1,
     "title": "Сам себе вызов",
-    "description": "Начать челлендж",
+    "description": "первый начатый челлендж",
     "motivation": "Ты не ждёшь указаний."
   }
 },
@@ -275,10 +275,142 @@
   "pk": 7,
   "fields": {
     "achievement_type": "challenge_tasks_streak",
-    "value": 2,
+    "value": 3,
     "title": "Собрался",
-    "description": "3 дня подряд",
+    "description": "выполнение челленджей 3 дня подряд",
     "motivation": "Нервная система поняла, что ты не шутил."
+  }
+},
+{
+  "model": "core.achievement",
+  "pk": 8,
+  "fields": {
+    "achievement_type": "challenge_tasks_streak",
+    "value": 7,
+    "title": "Соблюдаешь Ритуал",
+    "description": "выполнение челленджей 7 дней подряд",
+    "motivation": "Ты не пропустил. Ты не забыл. Это уже часть тебя."
+  }
+},
+{
+  "model": "core.achievement",
+  "pk": 9,
+  "fields": {
+    "achievement_type": "daily_cycles_streak",
+    "value": 7,
+    "title": "След оставлен",
+    "description": "ведение дневника осознаний (7 записей)",
+    "motivation": "Ты фиксируешь рост, а не забываешь."
+  }
+},
+{
+  "model": "core.achievement",
+  "pk": 10,
+  "fields": {
+    "achievement_type": "bot_usage",
+    "value": 30,
+    "title": "Стабильность",
+    "description": "закрытие 30 дней практики (30 дней использования бота)",
+    "motivation": "Спокойный, стабильный, направленный."
+  }
+},
+{
+  "model": "core.achievement",
+  "pk": 11,
+  "fields": {
+    "achievement_type": "achievements_collection",
+    "value": 10,
+    "title": "Системность",
+    "description": "получение 10+ достижений",
+    "motivation": "Ты не ждёшь вдохновения. Ты просто идёшь."
+  }
+},
+{
+  "model": "core.achievement",
+  "pk": 12,
+  "fields": {
+    "achievement_type": "challenge_tasks_streak",
+    "value": 14,
+    "title": "Сдержал Слово",
+    "description": "выполнение челленджей 14 дней подряд",
+    "motivation": "Обещание себе — не пустой звук."
+  }
+},
+{
+  "model": "core.achievement",
+  "pk": 13,
+  "fields": {
+    "achievement_type": "challenge_tasks_streak",
+    "value": 21,
+    "title": "Воин Режима",
+    "description": "выполнение челленджей 21 день подряд",
+    "motivation": "Дисциплина стала доспехом."
+  }
+},
+{
+  "model": "core.achievement",
+  "pk": 14,
+  "fields": {
+    "achievement_type": "challenge_tasks_streak",
+    "value": 30,
+    "title": "Ношу свою волю",
+    "description": "выполнение челленджей 30 дней подряд",
+    "motivation": "Ты не вдохновлён. Ты решителен."
+  }
+},
+{
+  "model": "core.achievement",
+  "pk": 15,
+  "fields": {
+    "achievement_type": "challenge_completed",
+    "value": 5,
+    "title": "Выдержал Порог",
+    "description": "5 выполненных челленджей",
+    "motivation": "Ты не отступил. Значит — ты в игре."
+  }
+},
+{
+  "model": "core.achievement",
+  "pk": 16,
+  "fields": {
+    "achievement_type": "challenge_completed",
+    "value": 10,
+    "title": "Держишь Ритм",
+    "description": "10 выполненных челленджей",
+    "motivation": "Режим начинает работать на тебя."
+  }
+},
+{
+  "model": "core.achievement",
+  "pk": 17,
+  "fields": {
+    "achievement_type": "challenge_completed",
+    "value": 25,
+    "title": "Живёшь по Кодексу",
+    "description": "25 выполненных челленджей",
+    "motivation": "Ты перестал бороться — ты просто живёшь так."
+  }
+},
+{
+  "model": "core.achievement",
+  "pk": 18,
+  "fields": {
+    "achievement_type": "challenge_completed",
+    "value": 50,
+    "title": "Железный",
+    "description": "50 выполненных челленджей",
+    "motivation": "Сила — это повторение. Каждый день — удар в цель."
+  }
+},
+{
+  "model": "core.achievement",
+  "pk": 19,
+  "fields": {
+    "achievement_type": "bot_usage_without_reset",
+    "value": 60,
+    "title": "Опора внутри",
+    "description": "ежедневное взаимодействие с ботом на протяжении двух месяцев",
+    "motivation": "Ты теперь не зависишь от мотивации"
   }
 }
 ]

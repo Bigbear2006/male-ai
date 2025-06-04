@@ -1,4 +1,4 @@
-from django.db.models import TextChoices
+from django.db.models import IntegerChoices, TextChoices
 
 
 class Priority(TextChoices):
@@ -87,4 +87,18 @@ class AchievementType(TextChoices):
     START_CHALLENGE = 'start_challenge', 'Начать челлендж'
     DAILY_CYCLES_STREAK = 'daily_cycles_streak', 'Вести дневник'
     BOT_USAGE = 'bot_usage', 'Использование бота'
+    BOT_USAGE_WITHOUT_RESET = (
+        'bot_usage_without_reset',
+        'Использование бота без полного сброса',
+    )
     ACHIEVEMENTS_COLLECTION = 'achievements_collection', 'Получение достижений'
+
+
+class WeekDay(IntegerChoices):
+    MONDAY = 0, 'Понедельник'
+    TUESDAY = 1, 'Вторник'
+    WEDNESDAY = 2, 'Среда'
+    THURSDAY = 3, 'Четверг'
+    FRIDAY = 4, 'Пятница'
+    SATURDAY = 5, 'Суббота'
+    SUNDAY = 6, 'Воскресенье'

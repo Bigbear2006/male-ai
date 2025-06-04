@@ -6,15 +6,15 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot import ai
-from bot.greetings import greetings
+from bot.common.ai import openai_client
+from bot.common.ai.prompts import state_analysis_prompt
+from bot.common.greetings import greetings
 from bot.keyboards.survey import (
     ages_kb,
     get_energy_directions_kb,
     self_ratings_kb,
 )
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
-from bot.prompts import state_analysis_prompt
 from bot.states import ProfileState, SurveyState
 from core.choices import (
     EnergyDirection,
@@ -202,7 +202,9 @@ async def set_key_quality(msg: Message, state: FSMContext):
     )
 
     msg_to_edit = await msg.answer('Составляю твой профиль 1.0...')
-    start_point = await ai.answer(await state_analysis_prompt(survey))
+    start_point = await openai_client.answer(
+        await state_analysis_prompt(survey),
+    )
     await state.set_data({'start_point': start_point})
     await state.set_state(ProfileState.month_goal)
     await msg_to_edit.edit_text(

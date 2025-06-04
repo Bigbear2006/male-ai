@@ -3,10 +3,10 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot import ai
+from bot.common.ai import openai_client
+from bot.common.ai.prompts import select_month_goal_prompt
 from bot.keyboards.start import menu_kb
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
-from bot.prompts import select_month_goal_prompt
 from bot.states import ProfileState
 from core.choices import UpgradeStyle
 from core.models import Profile, Survey
@@ -23,7 +23,9 @@ async def set_month_goal_with_ai(query: CallbackQuery, state: FSMContext):
         f'{query.message.text}\n\nВыбираю подходящую цель...',
     )
     survey = await Survey.objects.aget(pk=query.message.chat.id)
-    month_goal = await ai.answer(await select_month_goal_prompt(survey))
+    month_goal = await openai_client.answer(
+        await select_month_goal_prompt(survey),
+    )
     await state.update_data(month_goal=month_goal)
     await query.message.edit_text(
         f'ИИ предлагает цель:\n{month_goal}\n\n'

@@ -6,19 +6,19 @@ from asgiref.sync import sync_to_async
 from django.db import IntegrityError
 from django.utils.timezone import now
 
-from bot.achievements import (
+from bot.keyboards.utils import keyboard_from_queryset, one_button_keyboard
+from bot.services.achievement import (
     check_challenge_tasks_streak,
     check_completed_challenges,
     check_started_challenges,
 )
-from bot.keyboards.utils import keyboard_from_queryset, one_button_keyboard
-from bot.loader import logger
 from bot.states import ChallengeState
 from core.models import (
     Challenge,
+    ChallengeTask,
     ChallengeTaskQuestion,
     ClientChallenge,
-    ClientChallengeTaskQuestion, ChallengeTask,
+    ClientChallengeTaskQuestion,
 )
 
 router = Router()
@@ -27,7 +27,10 @@ router = Router()
 @router.callback_query(F.data == 'challenges')
 async def challenges(query: CallbackQuery):
     await query.message.edit_text(
-        'Челленджи',
+        '🧩 Челленджи\n\n'
+        'Короткие задачи на 3–7 дней, чтобы укрепиться в конкретной зоне.\n'
+        'Ты выбираешь направление — система помогает '
+        'удержаться и завершить.\n',
         reply_markup=await keyboard_from_queryset(
             Challenge.objects.all(),
             prefix='challenge',
@@ -79,11 +82,18 @@ async def answer_challenge_task_first_question(
     task_id = query.data.split(':')[1]
     questions = await sync_to_async(
         lambda: list(
-            ChallengeTaskQuestion.objects.filter(task_id=task_id).values('id', 'title'),
+            ChallengeTaskQuestion.objects.filter(task_id=task_id).values(
+                'id',
+                'title',
+            ),
         ),
     )()
 
-    await state.update_data(questions=questions, question_index=0, task_id=task_id)
+    await state.update_data(
+        questions=questions,
+        question_index=0,
+        task_id=task_id,
+    )
     await state.set_state(ChallengeState.answer_task_questions)
     await query.message.edit_text(questions[0]['title'])
 

@@ -1,18 +1,23 @@
 import asyncio
 import functools
+from collections.abc import Sequence
 
 from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Max
 from django.utils.timezone import now
 
-from bot import ai
+from bot.common.ai import openai_client
+from bot.common.ai.prompts import (
+    day_message_prompt,
+    month_report_prompt,
+    morning_message_prompt,
+    week_report_prompt,
+)
+from bot.common.time_utils import current_time
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from bot.loader import bot
-from bot.prompts import day_message_prompt, morning_message_prompt
-from bot.time_utils import current_time
 from core.choices import ManifestType
 from core.models import (
     ChallengeTask,
@@ -50,6 +55,16 @@ async def safe_send_message(chat_id: int | str, text: str, **kwargs):
     return await bot.send_message(chat_id, text, **kwargs)
 
 
+def chunk_sequence(lst: Sequence, size: int) -> list:
+    return [lst[i : i + size] for i in range(0, len(lst), size)]
+
+
+@handle_send_message_errors
+async def send_long_message(chat_id: int | str, text: str, **kwargs):
+    for text_chunk in chunk_sequence(text, 4000):
+        await bot.send_message(chat_id, text_chunk, **kwargs)
+
+
 def async_shared_task(func):
     @shared_task
     @functools.wraps(func)
@@ -74,7 +89,7 @@ async def asyncio_wait(
 
 
 async def send_free_morning_message(client: Client):
-    text = await ai.answer(await morning_message_prompt(client))
+    text = await openai_client.answer(await morning_message_prompt(client))
     await safe_send_message(client.pk, text)
 
 
@@ -137,7 +152,7 @@ async def send_morning_messages():
 
 
 async def send_day_message(client_id: int | str):
-    text = await ai.answer(await day_message_prompt(client_id))
+    text = await openai_client.answer(await day_message_prompt(client_id))
     await safe_send_message(client_id, text)
 
 
@@ -201,7 +216,7 @@ async def send_challenge_tasks():
     await asyncio_wait(
         [
             asyncio.create_task(send_challenge_task(c))
-            async for c in ClientChallenge.objects.all()
+            async for c in ClientChallenge.objects.get_subscribed()
         ],
     )
 
@@ -240,6 +255,41 @@ async def send_challenge_tasks_questions():
     await asyncio_wait(
         [
             asyncio.create_task(send_challenge_task_questions(c))
-            async for c in ClientChallenge.objects.all()
+            async for c in ClientChallenge.objects.get_subscribed()
+        ],
+    )
+
+
+async def send_week_report(client: Client):
+    text = await openai_client.answer(await week_report_prompt(client.pk))
+    await safe_send_message(client.pk, text)
+
+
+@async_shared_task
+async def send_week_reports():
+    today = now()
+    await asyncio_wait(
+        [
+            asyncio.create_task(send_week_report(c))
+            async for c in Client.objects.get_subscribed(
+                exclude_survey_unfilled=True,
+            ).filter(week_report_day=today.weekday())
+        ],
+    )
+
+
+async def send_month_report(client: Client):
+    text = await openai_client.answer(await month_report_prompt(client.pk))
+    await send_long_message(client.pk, text)
+
+
+@async_shared_task
+async def send_month_reports():
+    await asyncio_wait(
+        [
+            asyncio.create_task(send_month_report(c))
+            async for c in Client.objects.get_subscribed(
+                exclude_survey_unfilled=True,
+            )
         ],
     )

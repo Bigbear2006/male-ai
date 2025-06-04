@@ -47,6 +47,7 @@ class DayResultAdmin(admin.ModelAdmin):
 @admin.register(models.DailyCycle)
 class DailyCycleAdmin(admin.ModelAdmin):
     list_select_related = ('client',)
+    readonly_fields = ('created_at',)
 
 
 @admin.register(models.Challenge)

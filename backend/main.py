@@ -22,11 +22,11 @@ async def main():
         habits,
         profile,
         schedule,
+        settings,
         sos_button,
         start,
         subscribe,
         survey,
-        tests,
         try_free_version,
     )
     from bot.middlewares import WithClientMiddleware
@@ -45,8 +45,8 @@ async def main():
         challenges.router,
         schedule.router,
         achievements.router,
+        settings.router,
         faq.router,
-        tests.router,
     )
 
     dp.message.middleware(WithClientMiddleware())

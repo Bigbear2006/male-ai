@@ -3,6 +3,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
+from bot.common.greetings import start_msg_text, start_short_msg_text
 from bot.keyboards.start import menu_kb, start_kb
 from bot.keyboards.utils import one_button_keyboard
 from bot.loader import logger
@@ -24,32 +25,28 @@ async def start(msg: Message, state: FSMContext):
     if client.subscription_is_active():
         if not await client.has_profile():
             await msg.answer(
-                f'Привет, {msg.from_user.full_name}!\n'
-                f'Для начала нужно пройти анкетирование.',
+                start_msg_text,
                 reply_markup=one_button_keyboard(
-                    text='Пройти',
+                    text='Пройти анкетирование',
                     callback_data='to_survey',
                 ),
             )
             return
 
-        await msg.answer('Главное меню', reply_markup=menu_kb)
+        await msg.answer(start_short_msg_text, reply_markup=menu_kb)
         return
 
-    await msg.answer(
-        f'Привет, {msg.from_user.full_name}!',
-        reply_markup=start_kb,
-    )
+    await msg.answer(start_msg_text, reply_markup=start_kb)
 
 
 @router.callback_query(F.data == 'to_start')
 @flags.with_client
 async def to_start(query: CallbackQuery, client: Client):
     if client.subscription_is_active():
-        await query.message.edit_text('Главное меню', reply_markup=menu_kb)
+        await query.message.edit_text(
+            start_short_msg_text,
+            reply_markup=menu_kb,
+        )
         return
 
-    await query.message.edit_text(
-        f'Привет, {query.message.chat.full_name}!',
-        reply_markup=start_kb,
-    )
+    await query.message.edit_text(start_short_msg_text, reply_markup=start_kb)

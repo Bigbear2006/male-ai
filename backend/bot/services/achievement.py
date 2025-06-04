@@ -30,6 +30,10 @@ async def check_achievement(
     if not achievement:
         return
 
+    if achievement_type == AchievementType.BOT_USAGE_WITHOUT_RESET:
+        if DailyCycle.objects.get_max_gap(client_id) >= 3:
+            return
+
     try:
         await ClientAchievement.objects.acreate(
             client_id=client_id,
@@ -40,7 +44,7 @@ async def check_achievement(
         pass
 
     if achievement_type != AchievementType.ACHIEVEMENTS_COLLECTION:
-        await check_achievements_count(client_id)
+        await check_achievements_collection(client_id)
 
 
 async def check_sos_button_usages(client_id: int | str):
@@ -79,7 +83,7 @@ async def check_started_challenges(client_id: int | str):
     )
 
 
-async def check_daily_cycles(client_id: int | str):
+async def check_daily_cycles_streak(client_id: int | str):
     cycles = await DailyCycle.objects.get_count(client_id)
     return await check_achievement(
         client_id,
@@ -88,7 +92,7 @@ async def check_daily_cycles(client_id: int | str):
     )
 
 
-async def check_bot_usage_days(client: Client):
+async def check_bot_usage(client: Client):
     return await check_achievement(
         client.pk,
         AchievementType.BOT_USAGE,
@@ -96,7 +100,15 @@ async def check_bot_usage_days(client: Client):
     )
 
 
-async def check_achievements_count(client_id: int | str):
+async def check_bot_usage_without_reset(client: Client):
+    return await check_achievement(
+        client.pk,
+        AchievementType.BOT_USAGE_WITHOUT_RESET,
+        client.get_bot_usage_days(),
+    )
+
+
+async def check_achievements_collection(client_id: int | str):
     achievements = await ClientAchievement.objects.get_count(client_id)
     return await check_achievement(
         client_id,

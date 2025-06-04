@@ -55,3 +55,7 @@ class SosButtonState(StatesGroup):
 
 class ChallengeState(StatesGroup):
     answer_task_questions = State()
+
+
+class SettingsState(StatesGroup):
+    change_settings = State()

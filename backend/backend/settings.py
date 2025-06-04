@@ -201,7 +201,7 @@ CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
 
-__CELERY_BEAT_SCHEDULE = {
+CELERY_BEAT_SCHEDULE = {
     'send_free_morning_messages': {
         'task': 'core.tasks.send_free_morning_messages',
         'schedule': crontab(minute='0', hour='8'),
@@ -233,5 +233,13 @@ __CELERY_BEAT_SCHEDULE = {
     'send_challenge_tasks_questions': {
         'task': 'core.tasks.send_challenge_tasks_questions',
         'schedule': crontab(minute='0', hour='18'),
+    },
+    'send_week_reports': {
+        'task': 'core.tasks.send_week_reports',
+        'schedule': crontab(minute='0', hour='21'),
+    },
+    'send_month_reports': {
+        'task': 'core.tasks.send_month_reports',
+        'schedule': crontab(minute='0', hour='21', day_of_month=1),
     },
 }

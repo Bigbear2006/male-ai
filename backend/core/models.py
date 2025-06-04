@@ -21,6 +21,7 @@ from core.choices import (
     SupportOption,
     SupportStyle,
     UpgradeStyle,
+    WeekDay,
 )
 from core.managers import (
     ChallengeTaskManager,
@@ -72,6 +73,11 @@ class Client(models.Model):
         max_length=10,
         choices=SpendTime,
         blank=True,
+    )
+    week_report_day = models.PositiveIntegerField(
+        'День еженедельного обзора',
+        choices=WeekDay,
+        default=6,
     )
     objects = ClientManager()
 
@@ -214,10 +220,16 @@ class Profile(models.Model):
 
     @property
     def info(self):
+        return self.get_info()
+
+    def get_info(self, line_sep: str = '\n'):
         return (
-            f'Цель на 30 дней: {self.month_goal}\n'
-            f'В каких сферах жизни хотел бы прокачаться: {self.growth_zones}\n'
+            f'Цель на 30 дней: {self.month_goal}'
+            f'{line_sep}'
+            f'В каких сферах жизни хотел бы прокачаться: {self.growth_zones}'
+            f'{line_sep}'
             f'Стиль прокачки: {UpgradeStyle(self.upgrade_style).label}'
+            f'{line_sep}'
         )
 
 
@@ -346,6 +358,10 @@ class Schedule(models.Model):
     def message_text(self):
         blocks = '\n'.join([i.message_text for i in self.time_blocks.all()])
         return (
+            '📅 Режим дня\n\n'
+            'Структура, которая держит.\n'
+            'Выбираешь подходящий режим (базовый, фокусный или жёсткий) — '
+            'и двигаешься в заданном ритме.\n\n'
             f'Режим дня: {ScheduleType(self.schedule_type).label}\n\n'
             f'Блоки:\n{blocks}'
         )
@@ -517,6 +533,14 @@ class ClientChallengeTaskQuestion(models.Model):
     def __str__(self):
         return f'{self.client} - {self.answer}'
 
+    @property
+    def info(self):
+        return (
+            f'Задание: {self.question.task.title}\n'
+            f'Вопрос: {self.question.title}\n'
+            f'Ответ: {self.answer}'
+        )
+
 
 class Prompt(models.Model):
     prompt_type = models.CharField(
@@ -543,12 +567,13 @@ class Achievement(models.Model):
     )
     value = models.IntegerField('Значение')
     title = models.CharField('Название', max_length=255)
-    description = models.CharField('Описание', max_length=255)
+    description = models.CharField('За', max_length=255)
     motivation = models.CharField('Мотивация', max_length=255)
 
     class Meta:
         verbose_name = 'Достижение'
         verbose_name_plural = 'Достижения'
+        ordering = ['value']
 
     def __str__(self):
         return f'{AchievementType(self.achievement_type).label} - {self.value}'
@@ -556,7 +581,8 @@ class Achievement(models.Model):
     @property
     def message_text(self):
         return (
-            f'Получено новое достижение: "{self.title}"!\n\n{self.motivation}'
+            f'Получено новое достижение: "{self.title}" за {self.description}!'
+            f'\n\n{self.motivation}'
         )
 
 

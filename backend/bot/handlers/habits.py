@@ -10,12 +10,18 @@ from core.models import Habit
 
 router = Router()
 
+habits_msg = (
+    '✅ Трекер привычек\n\n'
+    'То, что хочешь внедрить — фиксируешь и сверяешь каждый вечер.\n'
+    'Добавляешь привычки, отмечаешь выполнение, видишь прогресс.\n'
+)
+
 
 @router.callback_query(F.data == 'habits_menu')
 async def habits_menu(query: CallbackQuery, state: FSMContext):
     await state.set_state(None)
     await query.message.edit_text(
-        'Трекер привычек',
+        habits_msg,
         reply_markup=habits_menu_kb,
     )
 
@@ -24,7 +30,7 @@ async def habits_menu(query: CallbackQuery, state: FSMContext):
 async def habits_list(query: CallbackQuery, state: FSMContext):
     await state.update_data(page=1)
     await query.message.edit_text(
-        'Твои привычки',
+        habits_msg,
         reply_markup=await get_habits_kb(query.message.chat.id, page=1),
     )
 
@@ -38,7 +44,7 @@ async def change_habits_page(query: CallbackQuery, state: FSMContext):
         page += 1
     await state.update_data(page=page)
     await query.message.edit_text(
-        'Твои привычки',
+        habits_msg,
         reply_markup=await get_habits_kb(query.message.chat.id, page=page),
     )
 
@@ -117,6 +123,6 @@ async def delete_habit(query: CallbackQuery, state: FSMContext):
     page = await state.get_value('page', 1)
     await Habit.objects.filter(pk=habit_id).adelete()
     await query.message.edit_text(
-        'Твои привычки',
+        habits_msg,
         reply_markup=await get_habits_kb(query.message.chat.id, page=page),
     )

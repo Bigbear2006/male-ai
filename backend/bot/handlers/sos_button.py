@@ -3,10 +3,10 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot import ai
-from bot.achievements import check_sos_button_usages
+from bot.common.ai import openai_client
+from bot.common.ai.prompts import get_sos_help, select_overload_method
 from bot.keyboards.start import back_to_start_kb
-from bot.prompts import get_sos_help, select_overload_method
+from bot.services.achievement import check_sos_button_usages
 from bot.states import SosButtonState
 from core.models import Client, ClientSosButtonUsage
 
@@ -17,7 +17,12 @@ router = Router()
 async def sos_button(query: CallbackQuery, state: FSMContext):
     await state.set_state(SosButtonState.problem)
     await query.message.edit_text(
-        'Если тебя что-то волнует - пиши, я помогу.',
+        '⚡️ SOS Кнопка\n\n'
+        'Когда не держишь ритм. Или накрывает.\n'
+        'Если тяжело — нажми. Здесь ты получишь поддержку: '
+        'словами, вопросом, направлением.\n'
+        'Без шаблонов. Без поверхностных советов. '
+        'Только по сути — как разговор с тем, кто понимает.\n',
         reply_markup=back_to_start_kb,
     )
 
@@ -25,10 +30,12 @@ async def sos_button(query: CallbackQuery, state: FSMContext):
 @router.message(F.text, StateFilter(SosButtonState.problem))
 @flags.with_client
 async def resolve_sos_problem(msg: Message, state: FSMContext, client: Client):
-    msg_to_edit = await msg.answer('Подбираю технику восстановления...')
+    msg_to_edit = await msg.answer('Печатает...')
 
     if not client.subscription_is_active():
-        text = await ai.answer(await select_overload_method(msg.text))
+        text = await openai_client.answer(
+            await select_overload_method(msg.text),
+        )
         await msg_to_edit.edit_text(text, reply_markup=back_to_start_kb)
         await state.set_state()
         return
@@ -40,7 +47,7 @@ async def resolve_sos_problem(msg: Message, state: FSMContext, client: Client):
         ]
 
     messages.append({'role': 'user', 'content': msg.text})
-    text = await ai.chat(messages)
+    text = await openai_client.chat(messages)
     messages.append({'role': 'assistant', 'content': text})
 
     if len(messages) < 7:

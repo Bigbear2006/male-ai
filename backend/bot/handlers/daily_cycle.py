@@ -3,10 +3,17 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot import ai
-from bot.achievements import check_bot_usage_days, check_daily_cycles
+from bot.common.ai import openai_client
+from bot.common.ai.prompts import (
+    evening_support_prompt,
+    morning_extended_message_prompt,
+)
 from bot.keyboards.daily_cycle import wellbeing_kb
-from bot.prompts import evening_support_prompt, morning_extended_message_prompt
+from bot.services.achievement import (
+    check_bot_usage,
+    check_bot_usage_without_reset,
+    check_daily_cycles_streak,
+)
 from bot.states import DailyCycleState
 from core.choices import ManifestType
 from core.models import Client, DailyCycle
@@ -23,7 +30,7 @@ async def set_manifest_type(
 ):
     await query.message.edit_text('Подбираю микро цель...')
     manifest_type = ManifestType(query.data.split(':')[1])
-    text = await ai.answer(
+    text = await openai_client.answer(
         await morning_extended_message_prompt(client, manifest_type),
     )
 
@@ -93,10 +100,11 @@ async def set_evening_wellbeing(
     )
 
     await query.message.edit_text('Сохраняю данные...')
-    text = await ai.answer(await evening_support_prompt(client))
+    text = await openai_client.answer(await evening_support_prompt(client))
 
-    await check_daily_cycles(client.pk)
-    await check_bot_usage_days(client)
+    await check_daily_cycles_streak(client.pk)
+    await check_bot_usage(client)
+    await check_bot_usage_without_reset(client)
 
     await query.message.edit_text(text)
     await state.clear()

@@ -4,6 +4,7 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
+from bot.common.time_utils import validate_time
 from bot.keyboards.schedule import (
     get_edit_time_block_kb,
     get_time_block_kb,
@@ -15,7 +16,6 @@ from bot.keyboards.utils import (
     one_button_keyboard,
 )
 from bot.states import ScheduleState
-from bot.time_utils import validate_time
 from core.choices import ScheduleType
 from core.models import Schedule, TimeBlock
 

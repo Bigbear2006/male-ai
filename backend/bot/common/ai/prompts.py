@@ -1,12 +1,12 @@
-from bot.client_info import (
+from bot.common.ai.context import (
     get_client_info,
     get_cycles_info,
     get_habits_info,
     get_schedule_info,
 )
-from bot.time_utils import current_time
+from bot.common.time_utils import current_time
 from core.choices import ManifestType, PromptType
-from core.models import Client, Prompt, Survey
+from core.models import Client, Profile, Prompt, Survey
 
 
 async def state_analysis_prompt(survey: Survey):
@@ -79,4 +79,5 @@ async def week_report_prompt(client_id: int | str):
 async def month_report_prompt(client_id: int | str):
     prompt = await Prompt.objects.aget(prompt_type=PromptType.MONTH_REPORT)
     cycles_info = await get_cycles_info(client_id, days=30)
-    return f'{prompt.text}\n{cycles_info}\n'
+    profile = await Profile.objects.aget(pk=client_id)
+    return f'{prompt.text}\n\n{cycles_info}\n\nПрофиль:\n{profile.info}'
