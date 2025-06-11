@@ -224,7 +224,7 @@ class ClientChallengeTaskQuestionManager(models.Manager):
         return streak
 
     async def get_recent(self, client_id: int | str, days: int = 7):
-        return self.filter(
+        return self.select_related('question__task').filter(
             client_id=client_id,
             created_at__date__gte=now().date() - timedelta(days=days),
         )

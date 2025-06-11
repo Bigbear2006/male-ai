@@ -27,6 +27,7 @@ async def main():
         start,
         subscribe,
         survey,
+        tests,
         try_free_version,
     )
     from bot.middlewares import WithClientMiddleware
@@ -47,6 +48,7 @@ async def main():
         achievements.router,
         settings.router,
         faq.router,
+        tests.router,
     )
 
     dp.message.middleware(WithClientMiddleware())

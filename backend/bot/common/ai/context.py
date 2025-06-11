@@ -33,9 +33,7 @@ async def get_schedule_info(client_id: int) -> str:
 
 
 async def get_answers_info(client_id: int):
-    answers = await ClientChallengeTaskQuestion.objects.select_related(
-        'question__task',
-    ).get_recent(client_id)
+    answers = await ClientChallengeTaskQuestion.objects.get_recent(client_id)
     return '\n\n'.join([i.info async for i in answers])
 
 
