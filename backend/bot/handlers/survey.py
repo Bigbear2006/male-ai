@@ -201,18 +201,18 @@ async def set_key_quality(msg: Message, state: FSMContext):
         key_quality=msg.text,
     )
 
-    msg_to_edit = await msg.answer('Составляю твой профиль 1.0...')
+    msg_to_edit = await msg.answer('Составляю твой профиль...')
     start_point = await openai_client.answer(
         await state_analysis_prompt(survey),
     )
     await state.set_data({'start_point': start_point})
     await state.set_state(ProfileState.month_goal)
     await msg_to_edit.edit_text(
-        'Твой профиль 1.0 готов!\n\n'
+        'Твой профиль готов!\n\n'
         f'Вот твоя точка старта:\n{start_point}\n\n'
         'Напиши свою цель на следующие 30 дней.',
         reply_markup=one_button_keyboard(
-            text='Доверить выбор цели ИИ',
+            text='Доверить выбор цели боту',
             callback_data='entrust_ai',
         ),
     )

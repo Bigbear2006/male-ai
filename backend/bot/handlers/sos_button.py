@@ -55,8 +55,8 @@ async def resolve_sos_problem(msg: Message, state: FSMContext, client: Client):
         await msg_to_edit.edit_text(text)
         return
 
-    await ClientSosButtonUsage.objects.acreate(client=client)
-    await check_sos_button_usages(client.pk)
-
     await msg_to_edit.edit_text(text, reply_markup=back_to_start_kb)
     await state.clear()
+
+    await ClientSosButtonUsage.objects.acreate(client=client)
+    await check_sos_button_usages(client.pk)

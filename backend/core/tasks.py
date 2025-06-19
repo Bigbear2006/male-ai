@@ -139,7 +139,7 @@ async def send_subscription_notifications():
 
 @async_shared_task
 async def send_morning_messages():
-    text = 'Как ты хочешь проявиться сегодня?'
+    text = 'Какой настрой ты выбираешь сегодня?'
     kb = keyboard_from_choices(ManifestType, prefix='manifest_type')
     await asyncio_wait(
         [

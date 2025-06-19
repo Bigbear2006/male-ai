@@ -73,7 +73,7 @@ async def set_success_result_2(msg: Message, state: FSMContext):
 async def set_fail_result(msg: Message, state: FSMContext):
     await state.update_data(fail_result=msg.text)
     await state.set_state(DailyCycleState.feelings)
-    await msg.answer('Что почувствовал?')
+    await msg.answer('Как себя чувствовал сегодня?')
 
 
 @router.message(F.text, StateFilter(DailyCycleState.feelings))

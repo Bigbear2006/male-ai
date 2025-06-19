@@ -36,7 +36,7 @@ async def morning_extended_message_prompt(
     info = await get_client_info(client.pk)
     return (
         f'{prompt.text}\n{info}\n'
-        f'Как хочет проявиться сегодня: {manifest_type.label}'
+        f'Какой настрой выбрал сегодня: {manifest_type.label}'
     )
 
 

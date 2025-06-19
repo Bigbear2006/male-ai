@@ -284,7 +284,7 @@ class DailyCycle(models.Model):
         verbose_name='Пользователь',
     )
     manifest_type = models.CharField(
-        'Как хочет проявиться',
+        'Какой настрой выбрал',
         max_length=20,
         choices=ManifestType,
         blank=True,
@@ -297,7 +297,7 @@ class DailyCycle(models.Model):
     )
     success_result = models.TextField('Что удалось', blank=True)
     fail_result = models.TextField('Что не получилось и почему', blank=True)
-    feelings = models.TextField('Что почувствовал', blank=True)
+    feelings = models.TextField('Как себя чувствовал сегодня?', blank=True)
     evening_wellbeing = models.IntegerField(
         'Самочувствие вечером',
         validators=[MinValueValidator(1), MaxValueValidator(5)],
@@ -324,11 +324,11 @@ class DailyCycle(models.Model):
 
         return (
             f'Дата: {self.created_at.date()}'
-            f'Как хочет проявиться: {manifest_type}'
+            f'Какой настрой выбрал: {manifest_type}'
             f'Самочувствие утром: {self.morning_wellbeing}'
             f'Что удалось: {self.success_result}'
             f'Что не получилось и почему: {self.fail_result}'
-            f'Что почувствовал: {self.feelings}'
+            f'Как себя чувствовал: {self.feelings}'
             f'Самочувствие вечером: {self.evening_wellbeing}'
         )
 

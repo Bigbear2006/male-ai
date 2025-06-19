@@ -28,7 +28,7 @@ async def set_month_goal_with_ai(query: CallbackQuery, state: FSMContext):
     )
     await state.update_data(month_goal=month_goal)
     await query.message.edit_text(
-        f'ИИ предлагает цель:\n{month_goal}\n\n'
+        f'Бот предлагает цель:\n{month_goal}\n\n'
         f'Ты можешь выбрать эту цель или написать свою.',
         reply_markup=one_button_keyboard(
             text='Выбрать эту цель',
