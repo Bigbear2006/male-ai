@@ -3,10 +3,10 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot.common.greetings import start_msg_text, start_short_msg_text
 from bot.keyboards.start import menu_kb, start_kb
 from bot.keyboards.utils import one_button_keyboard
 from bot.loader import logger
+from bot.utils.greetings import start_msg_text, start_short_msg_text
 from core.models import Client
 
 router = Router()

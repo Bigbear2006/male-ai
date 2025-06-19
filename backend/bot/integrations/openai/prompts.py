@@ -1,10 +1,10 @@
-from bot.common.ai.context import (
+from bot.integrations.openai.context import (
     get_client_info,
     get_cycles_info,
     get_habits_info,
     get_schedule_info,
 )
-from bot.common.time_utils import current_time
+from bot.utils.format import current_time
 from core.choices import ManifestType, PromptType
 from core.models import Client, Profile, Prompt, Survey
 

@@ -3,8 +3,11 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot.common.ai import openai_client
-from bot.common.ai.prompts import get_sos_help, select_overload_method
+from bot.integrations.openai import openai_client
+from bot.integrations.openai.prompts import (
+    get_sos_help,
+    select_overload_method,
+)
 from bot.keyboards.start import back_to_start_kb
 from bot.services.achievement import check_sos_button_usages
 from bot.states import SosButtonState

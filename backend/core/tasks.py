@@ -8,16 +8,16 @@ from celery.utils.log import get_task_logger
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.timezone import now
 
-from bot.common.ai import openai_client
-from bot.common.ai.prompts import (
+from bot.integrations.openai import openai_client
+from bot.integrations.openai.prompts import (
     day_message_prompt,
     month_report_prompt,
     morning_message_prompt,
     week_report_prompt,
 )
-from bot.common.time_utils import current_time
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from bot.loader import bot
+from bot.utils.format import current_time
 from core.choices import ManifestType
 from core.models import (
     ChallengeTask,

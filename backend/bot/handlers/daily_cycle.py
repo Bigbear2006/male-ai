@@ -3,8 +3,8 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot.common.ai import openai_client
-from bot.common.ai.prompts import (
+from bot.integrations.openai import openai_client
+from bot.integrations.openai.prompts import (
     evening_support_prompt,
     morning_extended_message_prompt,
 )

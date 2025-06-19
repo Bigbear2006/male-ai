@@ -6,9 +6,8 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot.common.ai import openai_client
-from bot.common.ai.prompts import state_analysis_prompt
-from bot.common.greetings import greetings
+from bot.integrations.openai import openai_client
+from bot.integrations.openai.prompts import state_analysis_prompt
 from bot.keyboards.survey import (
     ages_kb,
     get_energy_directions_kb,
@@ -16,6 +15,7 @@ from bot.keyboards.survey import (
 )
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from bot.states import ProfileState, SurveyState
+from bot.utils.greetings import greetings
 from core.choices import (
     EnergyDirection,
     Purpose,

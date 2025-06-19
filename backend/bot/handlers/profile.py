@@ -3,8 +3,8 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot.common.ai import openai_client
-from bot.common.ai.prompts import select_month_goal_prompt
+from bot.integrations.openai import openai_client
+from bot.integrations.openai.prompts import select_month_goal_prompt
 from bot.keyboards.start import menu_kb
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from bot.states import ProfileState

@@ -6,8 +6,18 @@ settings_kb = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             InlineKeyboardButton(
+                text='День еженедельного обзора',
+                callback_data='change_settings:week_report_day',
+            ),
+        ],
+        [
+            InlineKeyboardButton(
                 text='Цель на месяц',
                 callback_data='change_settings:month_goal',
+            ),
+            InlineKeyboardButton(
+                text='Продлить подписку',
+                callback_data='buy_subscription',
             ),
         ],
         [
@@ -15,17 +25,9 @@ settings_kb = InlineKeyboardMarkup(
                 text='Сферы прокачки',
                 callback_data='change_settings:growth_zones',
             ),
-        ],
-        [
             InlineKeyboardButton(
                 text='Стиль прокачки',
                 callback_data='change_settings:upgrade_style',
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text='День еженедельного обзора',
-                callback_data='change_settings:week_report_day',
             ),
         ],
         [InlineKeyboardButton(text='Назад', callback_data='to_start')],

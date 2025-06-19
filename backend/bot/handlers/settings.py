@@ -6,6 +6,7 @@ from aiogram.types import CallbackQuery, Message
 from bot.keyboards.settings import settings_kb, to_settings_kb
 from bot.keyboards.utils import keyboard_from_choices
 from bot.states import SettingsState
+from bot.utils.format import date_to_str
 from core.choices import UpgradeStyle, WeekDay
 from core.models import Client, Profile
 
@@ -19,7 +20,8 @@ async def settings(query: CallbackQuery, client: Client):
     profile_info = profile.get_info('\n\n')
     await query.message.edit_text(
         f'Настройки\n\n{profile_info}\n'
-        f'День еженедельного обзора: {WeekDay(client.week_report_day).label}',
+        f'День еженедельного обзора: {WeekDay(client.week_report_day).label}\n'
+        f'Дата окончания подписки: {date_to_str(client.subscription_end)}',
         reply_markup=settings_kb,
     )
 

@@ -1,4 +1,3 @@
-from datetime import time
 from typing import Optional
 
 from django.contrib.auth.models import AbstractUser
@@ -8,7 +7,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.timezone import now
 
-from bot.config import config
+from bot.utils.format import time_to_str
 from core.choices import (
     AchievementType,
     EnergyDirection,
@@ -35,10 +34,6 @@ from core.managers import (
     ScheduleManager,
     SurveyManager,
 )
-
-
-def strftime(__time: time):
-    return __time.strftime(config.TIME_FMT)
 
 
 class User(AbstractUser):
@@ -386,9 +381,10 @@ class TimeBlock(models.Model):
         if self.end_time:
             return (
                 f'{self.name}: '
-                f'{strftime(self.start_time)} - {strftime(self.end_time)}'
+                f'{time_to_str(self.start_time)} '
+                f'- {time_to_str(self.end_time)}'
             )
-        return f'{self.name}: с {strftime(self.start_time)}'
+        return f'{self.name}: с {time_to_str(self.start_time)}'
 
 
 class Course(models.Model):
