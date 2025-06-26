@@ -41,7 +41,7 @@ class YookassaClient(APIClient):
         ) as rsp:
             data = await rsp.json()
 
-        if not data.get('id'):
+        if not data.get('confirmation'):
             logger.info(data)
 
         return Payment(
