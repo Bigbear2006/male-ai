@@ -1,4 +1,5 @@
 from aiogram import F, Router
+from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
@@ -40,6 +41,7 @@ async def schedule_handler(query: CallbackQuery, state: FSMContext):
     await query.message.edit_text(
         schedule.message_text,
         reply_markup=schedule_kb,
+        parse_mode=ParseMode.HTML,
     )
 
 

@@ -32,29 +32,35 @@ back_to_start_kb = one_button_keyboard(text='Назад', callback_data='to_star
 menu_kb = InlineKeyboardMarkup(
     inline_keyboard=[
         [
-            InlineKeyboardButton(text='Режим дня', callback_data='schedule'),
+            InlineKeyboardButton(text='🕰️ Режим дня', callback_data='schedule'),
             InlineKeyboardButton(
-                text='Трекер привычек',
+                text='✅ Трекер привычек',
                 callback_data='habits_menu',
             ),
         ],
         [
-            InlineKeyboardButton(text='Челленджи', callback_data='challenges'),
             InlineKeyboardButton(
-                text='Достижения',
+                text='🔥 Челленджи',
+                callback_data='challenges',
+            ),
+            InlineKeyboardButton(
+                text='🏅 Достижения',
                 callback_data='achievements',
             ),
         ],
         [
             InlineKeyboardButton(
-                text='Микро-курсы',
+                text='📚 Микро-курсы',
                 callback_data='courses',
             ),
             InlineKeyboardButton(
-                text='SOS Кнопка',
+                text='🆘 SOS',
                 callback_data='sos_button',
             ),
         ],
-        [InlineKeyboardButton(text='Настройки', callback_data='settings')],
+        [
+            InlineKeyboardButton(text='⚙️ Настройки', callback_data='settings'),
+            InlineKeyboardButton(text='❓ FAQ', callback_data='faq'),
+        ],
     ],
 )
