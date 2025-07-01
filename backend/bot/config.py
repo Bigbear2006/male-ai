@@ -18,8 +18,7 @@ class Config:
         default_factory=lambda: env('YOOKASSA_SECRET_KEY'),
     )
 
-    YOOKASSA_RETURN_URL: str = field(default='https://t.me/vectorcore_bot')
-    SUBSCRIPTION_PRICE: int = field(default=499)
+    BOT_LINK: str = field(default='https://t.me/vectorcore_bot')
     CURRENCY: str = field(default='RUB')
     SUPPORT_LINK: str = field(default='https://t.me/bottecda')
     PAGE_SIZE: int = field(default=5)

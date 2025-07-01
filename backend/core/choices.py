@@ -102,3 +102,16 @@ class WeekDay(IntegerChoices):
     FRIDAY = 4, 'Пятница'
     SATURDAY = 5, 'Суббота'
     SUNDAY = 6, 'Воскресенье'
+
+
+class GrowthZone(TextChoices):
+    HEALTH = 'health', 'Здоровье и тело'
+    CONFIDENCE = 'confidence', 'Уверенность и характер'
+    RELATIONSHIPS = 'relationships', 'Отношения с женщинами'
+    CAREER = 'career', 'Карьера или бизнес'
+    FINANCES = 'finances', 'Деньги и финансы'
+    SOCIAL = 'social', 'Окружение и социальные навыки'
+    PERSONAL_GROWTH = 'personal_growth', 'Личностный рост и дисциплина'
+    HOBBY = 'hobby', 'Отдых и хобби'
+    OTHER = 'other', 'Другое'
+    DONE = 'done', 'Выбрал'

@@ -1,11 +1,13 @@
 import asyncio
 import functools
 from collections.abc import Sequence
+from datetime import timedelta
 
 from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Count, Q
 from django.utils.timezone import now
 
 from bot.integrations.openai import openai_client
@@ -273,7 +275,13 @@ async def send_week_reports():
             asyncio.create_task(send_week_report(c))
             async for c in Client.objects.get_subscribed(
                 exclude_survey_unfilled=True,
-            ).filter(week_report_day=today.weekday())
+            )
+            .annotate(daily_cycles_count=Count('daily_cycles'))
+            .filter(
+                Q(week_report_day=today.weekday())
+                | Q(created_at__date=(today() - timedelta(days=7)).date()),
+                daily_cycles_count__gt=0,
+            )
         ],
     )
 

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Optional
 
 from django.contrib.auth.models import AbstractUser
@@ -57,6 +58,15 @@ class Client(models.Model):
         blank=True,
     )
     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
+    email = models.EmailField('Почта', blank=True)
+    start_promo_code = models.ForeignKey(
+        'PromoCode',
+        models.SET_NULL,
+        'clients',
+        verbose_name='Промокод',
+        null=True,
+        blank=True,
+    )
     priority = models.CharField(
         'Приоритет',
         max_length=50,
@@ -87,7 +97,12 @@ class Client(models.Model):
             username += f' (@{self.username})'
         return username
 
+    def has_trial(self):
+        return self.created_at >= now() - timedelta(days=7)
+
     def subscription_is_active(self) -> bool:
+        if self.has_trial():
+            return True
         if not self.subscription_end:
             return False
         return self.subscription_end >= now()
@@ -628,3 +643,61 @@ class ClientSosButtonUsage(models.Model):
 
     def __str__(self):
         return f'[{self.created_at}] {self.client}'
+
+
+class SubscriptionPrice(models.Model):
+    price = models.PositiveIntegerField('Цена')
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
+    def __str__(self):
+        return f'{self.price} ₽'
+
+
+class PromoCode(models.Model):
+    code = models.CharField(
+        'Код',
+        max_length=25,
+        primary_key=True,
+        help_text='Только английские буквы, цифры и нижние подчеркивания',
+    )
+    description = models.CharField('Описание', max_length=255, blank=True)
+    discount = models.PositiveIntegerField('Скидка в %')
+    activations_limit = models.PositiveIntegerField('Количество активаций')
+    created_at = models.DateTimeField('Дата создания', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Промокод'
+        verbose_name_plural = 'Промокоды'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        if not self.description:
+            return self.code
+        return f'{self.code} ({self.description})'
+
+
+class PromoCodeActivation(models.Model):
+    client = models.ForeignKey(
+        Client,
+        models.CASCADE,
+        'activations',
+        verbose_name='Пользователь',
+    )
+    promo_code = models.ForeignKey(
+        PromoCode,
+        models.CASCADE,
+        'activations',
+        verbose_name='Промокод',
+    )
+    date = models.DateTimeField('Дата активации', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Активация промокода'
+        verbose_name_plural = 'Активации промокодов'
+        ordering = ['-date']
+
+    def __str__(self):
+        return f'{self.client} - {self.promo_code}'

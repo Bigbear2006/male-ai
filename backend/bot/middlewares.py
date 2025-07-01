@@ -2,11 +2,14 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from aiogram import BaseMiddleware
+from aiogram.dispatcher.event.bases import SkipHandler
 from aiogram.dispatcher.flags import get_flag
 from aiogram.types import CallbackQuery, Message, TelegramObject
 from django.core.exceptions import ObjectDoesNotExist
 
+from bot.keyboards.start import start_kb
 from bot.loader import logger
+from bot.utils.greetings import start_short_msg_text
 from core.models import Client
 
 
@@ -24,9 +27,23 @@ class WithClientMiddleware(BaseMiddleware):
                 if isinstance(event, Message)
                 else event.message.chat.id
             )
-            try:
-                client = await Client.objects.aget(pk=pk)
-                data['client'] = client
-            except ObjectDoesNotExist:
-                logger.info(event)
+
+            select_related = ()
+            only_subscribers = False
+            if isinstance(with_client, dict):
+                select_related = with_client.get('select_related', ())
+                only_subscribers = with_client.get('only_subscribers', False)
+
+            client = await Client.objects.select_related(
+                *select_related,
+            ).aget(pk=pk)
+
+            if only_subscribers and not client.subscription_is_active():
+                answer_func = (
+                    event.answer if isinstance(event, Message) else event.message.answer
+                )
+                await answer_func(start_short_msg_text, reply_markup=start_kb)
+                raise SkipHandler
+
+            data['client'] = client
         return await handler(event, data)

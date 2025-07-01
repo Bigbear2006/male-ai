@@ -1,45 +1,100 @@
 from datetime import timedelta
 
 from aiogram import F, Router, flags
+from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from django.utils.timezone import now
 
-from bot.config import config
 from bot.integrations.yookassa import (
     PaymentStatus,
     create_payment,
     get_payment_status,
 )
 from bot.keyboards.start import back_to_start_kb
-from bot.keyboards.subscribe import pay_subscription_kb
+from bot.keyboards.subscribe import (
+    pay_subscription_kb,
+    subscribe_kb,
+    to_subscribe_kb,
+)
 from bot.keyboards.utils import one_button_keyboard
+from bot.services.promo_code import promo_code_is_active
 from bot.states import SubscriptionState
-from core.models import Client
+from core.managers import get_or_none
+from core.models import (
+    Client,
+    PromoCode,
+    PromoCodeActivation,
+    SubscriptionPrice,
+)
 
 router = Router()
 
 
 @router.callback_query(F.data == 'buy_subscription')
-async def buy_subscription(query: CallbackQuery):
+@flags.with_client(select_related=('start_promo_code',))
+async def buy_subscription(
+    query: CallbackQuery,
+    state: FSMContext,
+    client: Client,
+):
+    price = await SubscriptionPrice.objects.afirst()
+    promo = client.start_promo_code
+    if promo_code_id := await state.get_value('promo_code_id'):
+        promo = await PromoCode.objects.aget(pk=promo_code_id)
+
+    text = f'Подписка стоит {price.price} ₽ в месяц\n\n'
+    if await promo_code_is_active(promo):
+        await state.update_data(promo_code_id=promo.pk)
+        text += (
+            f'Вы активировали скидку {promo.discount}%'
+            f' по промокоду {promo.code}'
+        )
+
+    await state.set_state()
+    await query.message.edit_text(text, reply_markup=subscribe_kb)
+
+
+@router.callback_query(F.data == 'activate_promo_code')
+async def activate_promo_code(query: CallbackQuery, state: FSMContext):
+    await state.set_state(SubscriptionState.promo_code)
     await query.message.edit_text(
-        f'Подписка стоит {config.SUBSCRIPTION_PRICE} ₽ в месяц',
-        reply_markup=one_button_keyboard(
-            text='Оплатить',
-            callback_data='pay_subscription',
-            back_button_data='to_start',
-        ),
+        'Введите промокод',
+        reply_markup=to_subscribe_kb,
     )
+
+
+@router.message(F.text, StateFilter(SubscriptionState.promo_code))
+async def set_promo_code(msg: Message, state: FSMContext):
+    promo_code = await get_or_none(PromoCode, pk=msg.text)
+    if promo_code:
+        await state.update_data(promo_code_id=promo_code.pk)
+        await msg.answer(
+            f'Промокод {promo_code.code} добавлен!',
+            reply_markup=to_subscribe_kb,
+        )
+        return
+    await msg.answer('Такого промокода нет', reply_markup=to_subscribe_kb)
 
 
 @router.callback_query(F.data == 'pay_subscription')
-async def pay_subscription(query: CallbackQuery, state: FSMContext):
-    await state.set_state(SubscriptionState.buying)
-    payment = await create_payment(
-        config.SUBSCRIPTION_PRICE,
-        'Оплата подписки',
+@flags.with_client
+async def pay_subscription(
+    query: CallbackQuery,
+    state: FSMContext,
+    client: Client,
+):
+    price = (await SubscriptionPrice.objects.afirst()).price
+    promo_code = await get_or_none(
+        PromoCode,
+        pk=await state.get_value('promo_code_id'),
     )
+    if await promo_code_is_active(promo_code):
+        price = price * ((100 - promo_code.discount) / 100)
+    payment = await create_payment(price, 'Оплата подписки', client.email)
+
     await state.update_data(payment_id=payment.id)
+    await state.set_state(SubscriptionState.buying)
     await query.message.edit_text(
         f'Ваша ссылка на оплату:\n\n{payment.confirmation_url}',
         reply_markup=pay_subscription_kb,
@@ -53,13 +108,20 @@ async def on_subscription_buying(
     state: FSMContext,
     client: Client,
 ):
-    status = await get_payment_status(await state.get_value('payment_id'))
+    data = await state.get_data()
+    status = await get_payment_status(data['payment_id'])
     if not status == PaymentStatus.SUCCEEDED:
         await query.answer(
             'К сожалению оплата не прошла. Попробуйте еще раз.',
             show_alert=True,
         )
         return
+
+    if promo_code_id := data.get('promo_code_id', None):
+        await PromoCodeActivation.objects.acreate(
+            client=client,
+            promo_code_id=promo_code_id,
+        )
 
     if client.subscription_end:
         subscription_end = client.subscription_end + timedelta(days=30)

@@ -47,7 +47,11 @@ class ClientManager(models.Manager):
         await self.filter(pk=pk).aupdate(**kwargs)
 
     def get_subscribed(self, *, exclude_survey_unfilled: bool = False):
-        qs = self.filter(subscription_end__gte=now())
+        today = now()
+        qs = self.filter(
+            models.Q(subscription_end__gte=today)
+            | models.Q(created_at__gte=today() - timedelta(days=7)),
+        )
         if exclude_survey_unfilled:
             return qs.exclude(
                 survey__isnull=True,
@@ -238,3 +242,10 @@ class ClientSosButtonUsageManager(models.Manager):
 class ClientAchievementManager(models.Manager):
     async def get_count(self, client_id: int | str):
         return await self.filter(client_id=client_id).acount()
+
+
+async def get_or_none(model: type[models.Model], *args, **kwargs):
+    try:
+        return await model.objects.aget(*args, **kwargs)
+    except ObjectDoesNotExist:
+        return

@@ -1,7 +1,12 @@
 from aiogram.fsm.state import State, StatesGroup
 
 
+class StartState(StatesGroup):
+    email = State()
+
+
 class SubscriptionState(StatesGroup):
+    promo_code = State()
     buying = State()
 
 
@@ -22,6 +27,7 @@ class SurveyState(StatesGroup):
 class ProfileState(StatesGroup):
     month_goal = State()
     growth_zones = State()
+    other_growth_zones = State()
     upgrade_style = State()
 
 

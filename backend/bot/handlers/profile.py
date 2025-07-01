@@ -1,4 +1,7 @@
+import contextlib
+
 from aiogram import F, Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -8,7 +11,7 @@ from bot.integrations.openai.prompts import select_month_goal_prompt
 from bot.keyboards.start import menu_kb
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from bot.states import ProfileState
-from core.choices import UpgradeStyle
+from core.choices import UpgradeStyle, GrowthZone
 from core.models import Profile, Survey
 
 router = Router()
@@ -54,11 +57,57 @@ async def set_month_goal(msg: Message | CallbackQuery, state: FSMContext):
     await state.set_state(ProfileState.growth_zones)
     await answer_func(
         text='В каких сферах жизни ты хотел бы прокачаться?',
-        reply_markup=None,
+        reply_markup=keyboard_from_choices(GrowthZone, prefix='growth_zone'),
     )
 
 
-@router.message(F.text, StateFilter(ProfileState.growth_zones))
+@router.callback_query(
+    F.data.startswith('growth_zone'),
+    StateFilter(ProfileState.growth_zones),
+)
+async def set_growth_zone(query: CallbackQuery, state: FSMContext):
+    growth_zone = GrowthZone(query.data.split(':')[1])
+    growth_zones = await state.get_value('growth_zones', [])
+
+    if growth_zone == GrowthZone.OTHER:
+        await state.set_state(ProfileState.other_growth_zones)
+        await query.message.edit_text(
+            'В каких сферах жизни ты хотел бы прокачаться?\n'
+            'Введи несколько сфер через запятую',
+        )
+        return
+
+    if growth_zone != GrowthZone.DONE:
+        if growth_zone.label in growth_zones:
+            growth_zones.remove(growth_zone.label)
+        else:
+            growth_zones.append(growth_zone.label)
+        await state.update_data(growth_zones=growth_zones)
+
+        with contextlib.suppress(TelegramBadRequest):
+            await query.message.edit_text(
+                'В каких сферах жизни ты хотел бы прокачаться?\n'
+                f'Ты выбрал: {", ".join(growth_zones)}',
+                reply_markup=keyboard_from_choices(GrowthZone, prefix='growth_zone'),
+            )
+
+    if len(growth_zones) == 3 or growth_zone == 'done':
+        if not growth_zones:
+            await query.answer(
+                'Надо выбрать хотя бы одну сферу',
+                show_alert=True,
+            )
+            return
+
+        await state.update_data(growth_zones=', '.join(growth_zones))
+        await state.set_state(ProfileState.upgrade_style)
+        await query.message.edit_text(
+            'Выбери стиль прокачки',
+            reply_markup=keyboard_from_choices(UpgradeStyle),
+        )
+
+
+@router.message(F.text, StateFilter(ProfileState.other_growth_zones))
 async def set_growth_zones(msg: Message, state: FSMContext):
     await state.update_data(growth_zones=msg.text)
     await state.set_state(ProfileState.upgrade_style)
