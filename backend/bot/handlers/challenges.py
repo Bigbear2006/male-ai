@@ -1,4 +1,4 @@
-from aiogram import F, Router
+from aiogram import F, Router, flags
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -25,6 +25,7 @@ router = Router()
 
 
 @router.callback_query(F.data == 'challenges')
+@flags.with_client(only_subscribers=True)
 async def challenges(query: CallbackQuery):
     await query.message.edit_text(
         '🧩 Челленджи\n\n'

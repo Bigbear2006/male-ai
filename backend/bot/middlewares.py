@@ -5,10 +5,8 @@ from aiogram import BaseMiddleware
 from aiogram.dispatcher.event.bases import SkipHandler
 from aiogram.dispatcher.flags import get_flag
 from aiogram.types import CallbackQuery, Message, TelegramObject
-from django.core.exceptions import ObjectDoesNotExist
 
 from bot.keyboards.start import start_kb
-from bot.loader import logger
 from bot.utils.greetings import start_short_msg_text
 from core.models import Client
 
@@ -40,7 +38,9 @@ class WithClientMiddleware(BaseMiddleware):
 
             if only_subscribers and not client.subscription_is_active():
                 answer_func = (
-                    event.answer if isinstance(event, Message) else event.message.answer
+                    event.answer
+                    if isinstance(event, Message)
+                    else event.message.answer
                 )
                 await answer_func(start_short_msg_text, reply_markup=start_kb)
                 raise SkipHandler

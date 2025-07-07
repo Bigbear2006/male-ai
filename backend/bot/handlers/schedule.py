@@ -1,4 +1,4 @@
-from aiogram import F, Router
+from aiogram import F, Router, flags
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
@@ -24,6 +24,7 @@ router = Router()
 
 
 @router.callback_query(F.data == 'schedule')
+@flags.with_client(only_subscribers=True)
 async def schedule_handler(query: CallbackQuery, state: FSMContext):
     await state.set_state()
 

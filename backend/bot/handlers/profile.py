@@ -11,7 +11,7 @@ from bot.integrations.openai.prompts import select_month_goal_prompt
 from bot.keyboards.start import menu_kb
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from bot.states import ProfileState
-from core.choices import UpgradeStyle, GrowthZone
+from core.choices import GrowthZone, UpgradeStyle
 from core.models import Profile, Survey
 
 router = Router()
@@ -88,7 +88,10 @@ async def set_growth_zone(query: CallbackQuery, state: FSMContext):
             await query.message.edit_text(
                 'В каких сферах жизни ты хотел бы прокачаться?\n'
                 f'Ты выбрал: {", ".join(growth_zones)}',
-                reply_markup=keyboard_from_choices(GrowthZone, prefix='growth_zone'),
+                reply_markup=keyboard_from_choices(
+                    GrowthZone,
+                    prefix='growth_zone',
+                ),
             )
 
     if len(growth_zones) == 3 or growth_zone == 'done':

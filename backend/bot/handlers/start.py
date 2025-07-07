@@ -6,11 +6,11 @@ from aiogram.types import CallbackQuery, Message
 from bot.keyboards.start import menu_kb, start_kb
 from bot.keyboards.utils import one_button_keyboard
 from bot.loader import logger
-from bot.states import StartState, ProfileState
+from bot.states import ProfileState, StartState
 from bot.utils.greetings import start_msg_text, start_short_msg_text
 from bot.utils.validation import validate_email
 from core.managers import get_or_none
-from core.models import Client, PromoCode, Survey, Profile
+from core.models import Client, Profile, PromoCode, Survey
 
 router = Router()
 
@@ -43,12 +43,11 @@ async def start(msg: Message, state: FSMContext, command: CommandObject):
         if await get_or_none(Survey, pk=client.pk):
             await state.set_state(ProfileState.month_goal)
             await msg.answer(
-                'Ты уже заполнил анкету. '
-                'Давай теперь составим твой профиль.',
+                'Ты уже заполнил анкету. Давай теперь составим твой профиль.',
                 reply_markup=one_button_keyboard(
                     text='Выбрать цель на 30 дней',
                     callback_data='entrust_ai',
-                )
+                ),
             )
             return
 

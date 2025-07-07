@@ -3,7 +3,6 @@ from django.contrib.auth.models import Group
 
 from bot.config import config
 from core import models
-from core.models import PromoCode
 
 admin.site.unregister(Group)
 
@@ -76,5 +75,5 @@ class PromoCodeAdmin(admin.ModelAdmin):
 
 @admin.register(models.PromoCodeActivation)
 class PromoCodeActivationAdmin(admin.ModelAdmin):
-    readonly_fields = ('client', 'promo_code', 'date',)
+    readonly_fields = ('client', 'promo_code', 'date')
     list_select_related = ('client', 'promo_code')

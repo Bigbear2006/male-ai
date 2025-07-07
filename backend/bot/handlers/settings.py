@@ -3,7 +3,11 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot.keyboards.settings import settings_kb, to_settings_kb
+from bot.keyboards.settings import (
+    cancel_subscription_kb,
+    get_settings_kb,
+    to_settings_kb,
+)
 from bot.keyboards.utils import keyboard_from_choices
 from bot.states import SettingsState
 from bot.utils.format import date_to_str
@@ -14,7 +18,7 @@ router = Router()
 
 
 @router.callback_query(F.data == 'settings')
-@flags.with_client
+@flags.with_client(only_subscribers=True)
 async def settings(query: CallbackQuery, client: Client):
     profile = await Profile.objects.aget(pk=client.pk)
     profile_info = profile.get_info('\n\n')
@@ -22,7 +26,9 @@ async def settings(query: CallbackQuery, client: Client):
         f'Настройки\n\n{profile_info}\n'
         f'День еженедельного обзора: {WeekDay(client.week_report_day).label}\n'
         f'Дата окончания подписки: {date_to_str(client.subscription_end)}',
-        reply_markup=settings_kb,
+        reply_markup=get_settings_kb(
+            cancel_subscription_button=client.payment_method_id is not None,
+        ),
     )
 
 
@@ -71,7 +77,7 @@ async def change_settings_callback_query_handler(
         await Profile.objects.filter(pk=client_id).aupdate(
             upgrade_style=query.data,
         )
-    else:
+    elif field == 'week_report_day':
         await Client.objects.update_by_id(
             client_id,
             week_report_day=query.data,
@@ -80,5 +86,29 @@ async def change_settings_callback_query_handler(
     await state.clear()
     await query.message.edit_text(
         'Настройки изменены!',
+        reply_markup=to_settings_kb,
+    )
+
+
+@router.callback_query(F.data == 'cancel_subscription')
+@flags.with_client
+async def cancel_subscription_handler(query: CallbackQuery, client: Client):
+    await query.message.edit_text(
+        'Ты точно хочешь отменить подписку?\n'
+        f'Это отменит будущие списания, '
+        f'но ты все еще сможешь пользоваться ботом до '
+        f'{date_to_str(client.subscription_end)}',
+        reply_markup=cancel_subscription_kb,
+    )
+
+
+@router.callback_query(F.data == 'confirm_subscription_cancellation')
+async def confirm_subscription_cancellation_handler(query: CallbackQuery):
+    await Client.objects.update_by_id(
+        query.message.chat.id,
+        payment_method_id=None,
+    )
+    await query.message.edit_text(
+        'Подписка отменена',
         reply_markup=to_settings_kb,
     )

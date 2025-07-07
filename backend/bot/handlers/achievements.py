@@ -15,7 +15,7 @@ router = Router()
 
 
 @router.callback_query(F.data == 'achievements')
-@flags.with_client
+@flags.with_client(only_subscribers=True)
 async def achievements_handler(query: CallbackQuery, client: Client):
     completed_challenges = await ClientChallenge.objects.get_completed_count(
         client.pk,

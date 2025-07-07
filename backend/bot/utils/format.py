@@ -9,7 +9,9 @@ def time_to_str(__time: time):
     return __time.strftime(config.TIME_FMT)
 
 
-def date_to_str(__date: datetime):
+def date_to_str(__date: datetime | None):
+    if __date is None:
+        return ''
     return __date.astimezone(config.TZ).strftime(config.DATE_FMT)
 
 

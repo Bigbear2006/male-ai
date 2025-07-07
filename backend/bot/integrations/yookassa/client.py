@@ -4,8 +4,11 @@ from aiohttp import BasicAuth
 
 from bot.config import config
 from bot.integrations.common.client import APIClient
-from bot.integrations.yookassa.schemas import Payment, PaymentStatus
-from bot.loader import logger
+from bot.integrations.yookassa.schemas import Payment
+from bot.integrations.yookassa.utils import (
+    get_create_payment_payload,
+    get_data,
+)
 
 
 class YookassaClient(APIClient):
@@ -29,53 +32,25 @@ class YookassaClient(APIClient):
         amount: float,
         description: str,
         email: str,
+        payment_method_id: str | None = None,
     ) -> Payment:
         async with self.session.post(
             '',
             headers=self.headers,
-            json={
-                'amount': {'value': amount, 'currency': config.CURRENCY},
-                'payment_method_data': {'type': 'bank_card'},
-                'capture': True,
-                'confirmation': {
-                    'type': 'redirect',
-                    'return_url': config.BOT_LINK,
-                },
-                'description': description,
-                'receipt': {
-                    'customer': {'email': email},
-                    'items': [
-                        {
-                            'amount': {
-                                'value': amount,
-                                'currency': config.CURRENCY,
-                            },
-                            'description': description,
-                            'vat_code': 1,
-                            'quantity': 1,
-                        },
-                    ],
-                },
-            },
+            json=get_create_payment_payload(
+                amount,
+                description,
+                email,
+                payment_method_id,
+            ),
         ) as rsp:
-            data = await rsp.json()
+            data = await get_data(rsp)
+        return Payment.from_dict(data)
 
-        if not data.get('confirmation'):
-            logger.info(data)
-
-        return Payment(
-            id=data['id'],
-            confirmation_url=data['confirmation']['confirmation_url'],
-        )
-
-    async def get_payment_status(self, payment_id: str) -> PaymentStatus:
+    async def get_payment(self, payment_id: str) -> Payment:
         async with self.session.get(
             f'{payment_id}/',
             headers=self.headers,
         ) as rsp:
-            data = await rsp.json()
-
-        if not data.get('status'):
-            logger.info(data)
-
-        return PaymentStatus(data['status'])
+            data = await get_data(rsp)
+        return Payment.from_dict(data)

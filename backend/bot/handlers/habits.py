@@ -1,4 +1,4 @@
-from aiogram import F, Router
+from aiogram import F, Router, flags
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -18,6 +18,7 @@ habits_msg = (
 
 
 @router.callback_query(F.data == 'habits_menu')
+@flags.with_client(only_subscribers=True)
 async def habits_menu(query: CallbackQuery, state: FSMContext):
     await state.set_state(None)
     await query.message.edit_text(

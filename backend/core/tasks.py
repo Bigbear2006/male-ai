@@ -17,6 +17,7 @@ from bot.integrations.openai.prompts import (
     morning_message_prompt,
     week_report_prompt,
 )
+from bot.integrations.yookassa import PaymentStatus, create_payment
 from bot.keyboards.utils import keyboard_from_choices, one_button_keyboard
 from bot.loader import bot
 from bot.utils.format import current_time
@@ -26,6 +27,7 @@ from core.models import (
     Client,
     ClientChallenge,
     ClientChallengeTaskQuestion,
+    SubscriptionPrice,
     TimeBlock,
 )
 
@@ -279,7 +281,7 @@ async def send_week_reports():
             .annotate(daily_cycles_count=Count('daily_cycles'))
             .filter(
                 Q(week_report_day=today.weekday())
-                | Q(created_at__date=(today() - timedelta(days=7)).date()),
+                | Q(created_at__date=(today - timedelta(days=7)).date()),
                 daily_cycles_count__gt=0,
             )
         ],
@@ -298,6 +300,49 @@ async def send_month_reports():
             asyncio.create_task(send_month_report(c))
             async for c in Client.objects.get_subscribed(
                 exclude_survey_unfilled=True,
+            )
+        ],
+    )
+
+
+async def prolong_subscription(
+    client: Client,
+    amount: float,
+    description: str,
+):
+    payment = await create_payment(
+        amount,
+        description,
+        client.email,
+        str(client.payment_method_id),
+    )
+
+    if payment.status == PaymentStatus.SUCCEEDED:
+        await client.prolong_subscription()
+        await safe_send_message(
+            client.pk,
+            f'Списано {amount} ₽ за продление подписки на месяц',
+        )
+        return
+
+    await safe_send_message(
+        client.pk,
+        f'Не удалось списать {amount} ₽ за продление подписки на месяц',
+    )
+
+
+@async_shared_task
+async def prolong_subscriptions():
+    price = await SubscriptionPrice.objects.afirst()
+    description = 'Оплата подписки'
+    await asyncio_wait(
+        [
+            asyncio.create_task(
+                prolong_subscription(client, price.price, description),
+            )
+            async for client in Client.objects.filter(
+                payment_method_id__isnull=False,
+                subscription_end=now() + timedelta(days=3),
             )
         ],
     )

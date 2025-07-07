@@ -59,6 +59,11 @@ class Client(models.Model):
     )
     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
     email = models.EmailField('Почта', blank=True)
+    payment_method_id = models.UUIDField(
+        'Идентификатор метода оплаты',
+        null=True,
+        blank=True,
+    )
     start_promo_code = models.ForeignKey(
         'PromoCode',
         models.SET_NULL,
@@ -97,7 +102,24 @@ class Client(models.Model):
             username += f' (@{self.username})'
         return username
 
+    async def prolong_subscription(
+        self,
+        days: int = 30,
+        *,
+        auto_save: bool = True,
+    ):
+        if self.subscription_is_active():
+            subscription_end = self.subscription_end + timedelta(days=days)
+        else:
+            subscription_end = now() + timedelta(days=days)
+        if auto_save:
+            self.subscription_end = subscription_end
+            await self.asave()
+        return subscription_end
+
     def has_trial(self):
+        if not self.start_promo_code_id:
+            return False
         return self.created_at >= now() - timedelta(days=7)
 
     def subscription_is_active(self) -> bool:

@@ -1,16 +1,13 @@
-from datetime import timedelta
-
 from aiogram import F, Router, flags
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
-from django.utils.timezone import now
 
 from bot.integrations.yookassa import (
     PaymentStatus,
     create_payment,
-    get_payment_status,
 )
+from bot.integrations.yookassa.service import get_payment
 from bot.keyboards.start import back_to_start_kb
 from bot.keyboards.subscribe import (
     pay_subscription_kb,
@@ -109,8 +106,8 @@ async def on_subscription_buying(
     client: Client,
 ):
     data = await state.get_data()
-    status = await get_payment_status(data['payment_id'])
-    if not status == PaymentStatus.SUCCEEDED:
+    payment = await get_payment(data['payment_id'])
+    if payment.status != PaymentStatus.SUCCEEDED:
         await query.answer(
             'К сожалению оплата не прошла. Попробуйте еще раз.',
             show_alert=True,
@@ -123,14 +120,11 @@ async def on_subscription_buying(
             promo_code_id=promo_code_id,
         )
 
-    if client.subscription_end:
-        subscription_end = client.subscription_end + timedelta(days=30)
-    else:
-        subscription_end = now() + timedelta(days=30)
-
+    subscription_end = await client.prolong_subscription(auto_save=False)
     await Client.objects.update_by_id(
         client.id,
         subscription_end=subscription_end,
+        payment_method_id=payment.payment_method_id,
     )
     await state.clear()
 
