@@ -242,4 +242,8 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'core.tasks.send_month_reports',
         'schedule': crontab(minute='0', hour='21', day_of_month=1),
     },
+    'prolong_subscriptions': {
+        'task': 'core.tasks.prolong_subscriptions',
+        'schedule': crontab(minute='0', hour='12'),
+    },
 }

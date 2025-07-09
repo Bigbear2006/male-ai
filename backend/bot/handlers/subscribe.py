@@ -1,8 +1,9 @@
 from aiogram import F, Router, flags
-from aiogram.filters import StateFilter
+from aiogram.filters import CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
+from bot.handlers.start import start
 from bot.integrations.yookassa import (
     PaymentStatus,
     create_payment,
@@ -29,34 +30,20 @@ router = Router()
 
 
 @router.callback_query(F.data == 'buy_subscription')
-@flags.with_client(select_related=('start_promo_code',))
-async def buy_subscription(
-    query: CallbackQuery,
-    state: FSMContext,
-    client: Client,
-):
+async def buy_subscription(query: CallbackQuery, state: FSMContext):
     price = await SubscriptionPrice.objects.afirst()
-    promo = client.start_promo_code
-    if promo_code_id := await state.get_value('promo_code_id'):
-        promo = await PromoCode.objects.aget(pk=promo_code_id)
-
-    text = f'Подписка стоит {price.price} ₽ в месяц\n\n'
-    if await promo_code_is_active(promo):
-        await state.update_data(promo_code_id=promo.pk)
-        text += (
-            f'Вы активировали скидку {promo.discount}%'
-            f' по промокоду {promo.code}'
-        )
-
     await state.set_state()
-    await query.message.edit_text(text, reply_markup=subscribe_kb)
+    await query.message.edit_text(
+        f'Подписка стоит {price.price} ₽ в месяц\n\n',
+        reply_markup=subscribe_kb,
+    )
 
 
 @router.callback_query(F.data == 'activate_promo_code')
 async def activate_promo_code(query: CallbackQuery, state: FSMContext):
     await state.set_state(SubscriptionState.promo_code)
     await query.message.edit_text(
-        'Введите промокод',
+        'Введи промокод',
         reply_markup=to_subscribe_kb,
     )
 
@@ -64,14 +51,24 @@ async def activate_promo_code(query: CallbackQuery, state: FSMContext):
 @router.message(F.text, StateFilter(SubscriptionState.promo_code))
 async def set_promo_code(msg: Message, state: FSMContext):
     promo_code = await get_or_none(PromoCode, pk=msg.text)
-    if promo_code:
-        await state.update_data(promo_code_id=promo_code.pk)
-        await msg.answer(
-            f'Промокод {promo_code.code} добавлен!',
-            reply_markup=to_subscribe_kb,
-        )
+    if not await promo_code_is_active(promo_code):
+        await msg.answer('Такого промокода нет', reply_markup=to_subscribe_kb)
         return
-    await msg.answer('Такого промокода нет', reply_markup=to_subscribe_kb)
+
+    await Client.objects.update_by_id(
+        msg.chat.id,
+        start_promo_code=promo_code,
+    )
+    await PromoCodeActivation.objects.acreate(
+        client_id=msg.chat.id,
+        promo_code=promo_code,
+    )
+
+    await start(msg, state, CommandObject())
+    await msg.answer(
+        f'Ты получил пробный период на {promo_code.trial_days} дней '
+        f'по промокоду {promo_code.code}!',
+    )
 
 
 @router.callback_query(F.data == 'pay_subscription')
@@ -82,12 +79,6 @@ async def pay_subscription(
     client: Client,
 ):
     price = (await SubscriptionPrice.objects.afirst()).price
-    promo_code = await get_or_none(
-        PromoCode,
-        pk=await state.get_value('promo_code_id'),
-    )
-    if await promo_code_is_active(promo_code):
-        price = price * ((100 - promo_code.discount) / 100)
     payment = await create_payment(price, 'Оплата подписки', client.email)
 
     await state.update_data(payment_id=payment.id)
@@ -113,12 +104,6 @@ async def on_subscription_buying(
             show_alert=True,
         )
         return
-
-    if promo_code_id := data.get('promo_code_id', None):
-        await PromoCodeActivation.objects.acreate(
-            client=client,
-            promo_code_id=promo_code_id,
-        )
 
     subscription_end = await client.prolong_subscription(auto_save=False)
     await Client.objects.update_by_id(

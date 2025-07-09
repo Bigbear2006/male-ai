@@ -19,9 +19,10 @@ router = Router()
 
 @router.callback_query(F.data == 'settings')
 @flags.with_client(only_subscribers=True)
-async def settings(query: CallbackQuery, client: Client):
+async def settings(query: CallbackQuery, state: FSMContext, client: Client):
     profile = await Profile.objects.aget(pk=client.pk)
     profile_info = profile.get_info('\n\n')
+    await state.set_state()
     await query.message.edit_text(
         f'Настройки\n\n{profile_info}\n'
         f'День еженедельного обзора: {WeekDay(client.week_report_day).label}\n'

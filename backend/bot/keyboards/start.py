@@ -7,12 +7,6 @@ start_kb = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             InlineKeyboardButton(
-                text='Попробовать бесплатную версию',
-                callback_data='try_free_version',
-            ),
-        ],
-        [
-            InlineKeyboardButton(
                 text='Перейти на полный функционал',
                 callback_data='buy_subscription',
             ),

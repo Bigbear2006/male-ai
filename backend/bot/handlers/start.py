@@ -27,6 +27,10 @@ async def start(msg: Message, state: FSMContext, command: CommandObject):
                 client.pk,
                 start_promo_code=promo_code,
             )
+        await msg.answer(
+            f'Ты получил пробный период на {promo_code.trial_days} дней '
+            f'по промокоду {promo_code.code}!',
+        )
     else:
         logger.info(f'Client {client} id={client.pk} was updated')
 
@@ -35,7 +39,8 @@ async def start(msg: Message, state: FSMContext, command: CommandObject):
         await msg.answer('Введи свою почту')
         return
 
-    if client.subscription_is_active():
+    await client.arefresh_from_db()
+    if await client.subscription_is_active():
         if await get_or_none(Profile, pk=client.pk):
             await msg.answer(start_short_msg_text, reply_markup=menu_kb)
             return
@@ -74,7 +79,7 @@ async def set_client_email(msg: Message, state: FSMContext):
 @router.callback_query(F.data == 'to_start')
 @flags.with_client
 async def to_start(query: CallbackQuery, client: Client):
-    if client.subscription_is_active():
+    if await client.subscription_is_active():
         await query.message.edit_text(
             start_short_msg_text,
             reply_markup=menu_kb,

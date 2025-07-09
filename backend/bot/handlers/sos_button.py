@@ -35,7 +35,7 @@ async def sos_button(query: CallbackQuery, state: FSMContext):
 async def resolve_sos_problem(msg: Message, state: FSMContext, client: Client):
     msg_to_edit = await msg.answer('Печатает...')
 
-    if not client.subscription_is_active():
+    if not await client.subscription_is_active():
         text = await openai_client.answer(
             await select_overload_method(msg.text),
         )

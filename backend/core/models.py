@@ -108,7 +108,7 @@ class Client(models.Model):
         *,
         auto_save: bool = True,
     ):
-        if self.subscription_is_active():
+        if await self.subscription_is_active():
             subscription_end = self.subscription_end + timedelta(days=days)
         else:
             subscription_end = now() + timedelta(days=days)
@@ -117,13 +117,17 @@ class Client(models.Model):
             await self.asave()
         return subscription_end
 
-    def has_trial(self):
+    async def has_trial(self):
         if not self.start_promo_code_id:
             return False
-        return self.created_at >= now() - timedelta(days=7)
 
-    def subscription_is_active(self) -> bool:
-        if self.has_trial():
+        self.start_promo_code = await PromoCode.objects.aget(pk=self.start_promo_code_id)
+        return self.created_at >= now() - timedelta(
+            days=self.start_promo_code.trial_days,
+        )
+
+    async def subscription_is_active(self) -> bool:
+        if await self.has_trial():
             return True
         if not self.subscription_end:
             return False
@@ -686,7 +690,9 @@ class PromoCode(models.Model):
         help_text='Только английские буквы, цифры и нижние подчеркивания',
     )
     description = models.CharField('Описание', max_length=255, blank=True)
-    discount = models.PositiveIntegerField('Скидка в %')
+    trial_days = models.PositiveIntegerField(
+        'Количество дней пробного периода',
+    )
     activations_limit = models.PositiveIntegerField('Количество активаций')
     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
 

@@ -29,14 +29,14 @@ class WithClientMiddleware(BaseMiddleware):
             select_related = ()
             only_subscribers = False
             if isinstance(with_client, dict):
-                select_related = with_client.get('select_related', ())
+                select_related = with_client.get('select_related', ('start_promo_code',))
                 only_subscribers = with_client.get('only_subscribers', False)
 
             client = await Client.objects.select_related(
                 *select_related,
             ).aget(pk=pk)
 
-            if only_subscribers and not client.subscription_is_active():
+            if only_subscribers and not await client.subscription_is_active():
                 answer_func = (
                     event.answer
                     if isinstance(event, Message)
