@@ -29,7 +29,10 @@ class WithClientMiddleware(BaseMiddleware):
             select_related = ()
             only_subscribers = False
             if isinstance(with_client, dict):
-                select_related = with_client.get('select_related', ('start_promo_code',))
+                select_related = with_client.get(
+                    'select_related',
+                    ('start_promo_code',),
+                )
                 only_subscribers = with_client.get('only_subscribers', False)
 
             client = await Client.objects.select_related(

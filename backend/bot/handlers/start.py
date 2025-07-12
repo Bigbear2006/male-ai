@@ -1,7 +1,13 @@
 from aiogram import F, Router, flags
+from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import (
+    BufferedInputFile,
+    CallbackQuery,
+    InputMediaDocument,
+    Message,
+)
 
 from bot.keyboards.start import menu_kb, start_kb
 from bot.keyboards.utils import one_button_keyboard
@@ -35,8 +41,54 @@ async def start(msg: Message, state: FSMContext, command: CommandObject):
         logger.info(f'Client {client} id={client.pk} was updated')
 
     if not client.email:
-        await state.set_state(StartState.email)
-        await msg.answer('Введи свою почту')
+        await msg.answer_media_group(
+            [
+                InputMediaDocument(
+                    media=BufferedInputFile.from_file(
+                        'assets/documents/1. Политика обработки ПС.docx',
+                    ),
+                ),
+                InputMediaDocument(
+                    media=BufferedInputFile.from_file(
+                        'assets/documents/2. Согласие на обработку ПС.docx',
+                    ),
+                ),
+                InputMediaDocument(
+                    media=BufferedInputFile.from_file(
+                        'assets/documents/3_Форма_запроса_на_предоставление_обрбатываемых_ПС.docx',
+                    ),
+                ),
+                InputMediaDocument(
+                    media=BufferedInputFile.from_file(
+                        'assets/documents/4_Форма_отзыва_согласия_на_обработку_ПС.docx',
+                    ),
+                ),
+                InputMediaDocument(
+                    media=BufferedInputFile.from_file(
+                        'assets/documents/Публичная_оферта_и_правила_использования.docx',
+                    ),
+                ),
+            ],
+        )
+        await msg.answer(
+            '<b>ООО «ИП Лазарева» — '
+            'Информация о сборе персональных данных</b>\n\n'
+            'Мы собираем и обрабатываем ваши '
+            'персональные данные в соответствии'
+            'с Федеральным законом №152-ФЗ '
+            '«О персональных данных».\n\n'
+            'Перед началом заполнения формы ознакомьтесь '
+            'с нашими документами.\n\n'
+            'Ваши данные используются строго для указанных целей '
+            'и защищены от несанкционированного доступа.\n'
+            'У вас всегда есть право запросить удаление '
+            'или изменение своих данных.',
+            parse_mode=ParseMode.HTML,
+            reply_markup=one_button_keyboard(
+                text='✅ Ознакомлен и согласен',
+                callback_data='approve_data_processing',
+            ),
+        )
         return
 
     await client.arefresh_from_db()
@@ -68,6 +120,14 @@ async def start(msg: Message, state: FSMContext, command: CommandObject):
     await msg.answer(start_msg_text, reply_markup=start_kb)
 
 
+@router.callback_query(F.data == 'approve_data_processing')
+async def approve_data_processing(query: CallbackQuery, state: FSMContext):
+    await state.set_state(StartState.email)
+    await query.message.answer(
+        'Введи свою почту. Она нужна для отправки чеков',
+    )
+
+
 @router.message(F.text, StateFilter(StartState.email))
 async def set_client_email(msg: Message, state: FSMContext):
     email = await validate_email(msg)
@@ -85,5 +145,4 @@ async def to_start(query: CallbackQuery, client: Client):
             reply_markup=menu_kb,
         )
         return
-
     await query.message.edit_text(start_short_msg_text, reply_markup=start_kb)

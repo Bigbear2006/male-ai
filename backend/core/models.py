@@ -121,7 +121,9 @@ class Client(models.Model):
         if not self.start_promo_code_id:
             return False
 
-        self.start_promo_code = await PromoCode.objects.aget(pk=self.start_promo_code_id)
+        self.start_promo_code = await PromoCode.objects.aget(
+            pk=self.start_promo_code_id,
+        )
         return self.created_at >= now() - timedelta(
             days=self.start_promo_code.trial_days,
         )
