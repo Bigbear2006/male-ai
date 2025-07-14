@@ -9,6 +9,7 @@ from aiogram.types import (
     Message,
 )
 
+from bot.config import config
 from bot.keyboards.start import menu_kb, start_kb
 from bot.keyboards.utils import one_button_keyboard
 from bot.loader import logger
@@ -33,43 +34,14 @@ async def start(msg: Message, state: FSMContext, command: CommandObject):
                 client.pk,
                 start_promo_code=promo_code,
             )
-        await msg.answer(
-            f'Ты получил пробный период на {promo_code.trial_days} дней '
-            f'по промокоду {promo_code.code}!',
-        )
+            await msg.answer(
+                f'Ты получил пробный период на {promo_code.trial_days} дней '
+                f'по промокоду {promo_code.code}!',
+            )
     else:
         logger.info(f'Client {client} id={client.pk} was updated')
 
     if not client.email:
-        await msg.answer_media_group(
-            [
-                InputMediaDocument(
-                    media=BufferedInputFile.from_file(
-                        'assets/documents/1. Политика обработки ПС.docx',
-                    ),
-                ),
-                InputMediaDocument(
-                    media=BufferedInputFile.from_file(
-                        'assets/documents/2. Согласие на обработку ПС.docx',
-                    ),
-                ),
-                InputMediaDocument(
-                    media=BufferedInputFile.from_file(
-                        'assets/documents/3_Форма_запроса_на_предоставление_обрбатываемых_ПС.docx',
-                    ),
-                ),
-                InputMediaDocument(
-                    media=BufferedInputFile.from_file(
-                        'assets/documents/4_Форма_отзыва_согласия_на_обработку_ПС.docx',
-                    ),
-                ),
-                InputMediaDocument(
-                    media=BufferedInputFile.from_file(
-                        'assets/documents/Публичная_оферта_и_правила_использования.docx',
-                    ),
-                ),
-            ],
-        )
         await msg.answer(
             '<b>ООО «ИП Лазарева» — '
             'Информация о сборе персональных данных</b>\n\n'
@@ -78,7 +50,15 @@ async def start(msg: Message, state: FSMContext, command: CommandObject):
             'с Федеральным законом №152-ФЗ '
             '«О персональных данных».\n\n'
             'Перед началом заполнения формы ознакомьтесь '
-            'с нашими документами.\n\n'
+            'с нашими документами.\n'
+            f'— <a href="{config.POLICY_URL}">Политика обработки ПС</a>\n'
+            f'— <a href="{config.CONSENT_URL}">Согласие на обработку ПС</a>\n'
+            f'— <a href="{config.REQUEST_FORM_URL}">'
+            f'Форма запроса на предоставление ПС</a>\n'
+            f'— <a href="{config.REVOCATION_FORM_URL}">'
+            f'Форма отзыва согласия</a>\n'
+            f'— <a href="{config.OFFER_URL}">'
+            f'Публичная оферта и правила использования</a>\n\n'
             'Ваши данные используются строго для указанных целей '
             'и защищены от несанкционированного доступа.\n'
             'У вас всегда есть право запросить удаление '
