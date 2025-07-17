@@ -50,7 +50,7 @@ class ClientManager(models.Manager):
         today = now()
         qs = self.filter(
             models.Q(subscription_end__gte=today)
-            | models.Q(created_at__gte=today() - timedelta(days=7)),
+            | models.Q(created_at__gte=today - timedelta(days=7)),
         )
         if exclude_survey_unfilled:
             return qs.exclude(

@@ -29,19 +29,7 @@ async def start(msg: Message, state: FSMContext, command: CommandObject):
     client, created = await Client.objects.create_or_update(msg.from_user)
     if created:
         logger.info(f'New client {client} id={client.pk} was created')
-        if promo_code := await get_or_none(PromoCode, pk=command.args):
-            await Client.objects.update_by_id(
-                client.pk,
-                start_promo_code=promo_code,
-            )
-            await msg.answer(
-                f'Ты получил пробный период на {promo_code.trial_days} дней '
-                f'по промокоду {promo_code.code}!',
-            )
-    else:
-        logger.info(f'Client {client} id={client.pk} was updated')
 
-    if not client.email:
         await msg.answer(
             '<b>ООО «ИП Лазарева» — '
             'Информация о сборе персональных данных</b>\n\n'
@@ -69,7 +57,20 @@ async def start(msg: Message, state: FSMContext, command: CommandObject):
                 callback_data='approve_data_processing',
             ),
         )
+
+        if promo_code := await get_or_none(PromoCode, pk=command.args):
+            await Client.objects.update_by_id(
+                client.pk,
+                start_promo_code=promo_code,
+            )
+            await msg.answer(
+                f'Ты получил пробный период на {promo_code.trial_days} дней '
+                f'по промокоду {promo_code.code}!',
+            )
+
         return
+    else:
+        logger.info(f'Client {client} id={client.pk} was updated')
 
     await client.arefresh_from_db()
     if await client.subscription_is_active():
@@ -102,18 +103,8 @@ async def start(msg: Message, state: FSMContext, command: CommandObject):
 
 @router.callback_query(F.data == 'approve_data_processing')
 async def approve_data_processing(query: CallbackQuery, state: FSMContext):
-    await state.set_state(StartState.email)
-    await query.message.answer(
-        'Введи свою почту. Она нужна для отправки чеков',
-    )
-
-
-@router.message(F.text, StateFilter(StartState.email))
-async def set_client_email(msg: Message, state: FSMContext):
-    email = await validate_email(msg)
-    await Client.objects.filter(pk=msg.chat.id).aupdate(email=email)
-    await state.set_state()
-    await start(msg, state, CommandObject())
+    await query.message.edit_reply_markup(reply_markup=None)
+    await start(query.message, state, CommandObject())
 
 
 @router.callback_query(F.data == 'to_start')

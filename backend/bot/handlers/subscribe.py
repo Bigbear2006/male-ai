@@ -2,6 +2,7 @@ from aiogram import F, Router, flags
 from aiogram.filters import CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+from django.db import IntegrityError
 
 from bot.handlers.start import start
 from bot.integrations.yookassa import (
@@ -17,7 +18,8 @@ from bot.keyboards.subscribe import (
 )
 from bot.keyboards.utils import one_button_keyboard
 from bot.services.promo_code import promo_code_is_active
-from bot.states import SubscriptionState
+from bot.states import SubscriptionState, StartState
+from bot.utils.validation import validate_email
 from core.managers import get_or_none
 from core.models import (
     Client,
@@ -59,16 +61,21 @@ async def set_promo_code(msg: Message, state: FSMContext):
         msg.chat.id,
         start_promo_code=promo_code,
     )
-    await PromoCodeActivation.objects.acreate(
-        client_id=msg.chat.id,
-        promo_code=promo_code,
-    )
 
-    await start(msg, state, CommandObject())
+    try:
+        await PromoCodeActivation.objects.acreate(
+            client_id=msg.chat.id,
+            promo_code=promo_code,
+        )
+    except IntegrityError:
+        await msg.answer('Ты уже активировал этот промокод')
+        return
+
     await msg.answer(
         f'Ты получил пробный период на {promo_code.trial_days} дней '
         f'по промокоду {promo_code.code}!',
     )
+    await start(msg, state, CommandObject())
 
 
 @router.callback_query(F.data == 'pay_subscription')
@@ -78,6 +85,13 @@ async def pay_subscription(
     state: FSMContext,
     client: Client,
 ):
+    if not client.email:
+        await state.set_state(StartState.email)
+        await query.message.answer(
+            'Введи свою почту. Она нужна для отправки чека',
+        )
+        return
+
     price = (await SubscriptionPrice.objects.afirst()).price
     payment = await create_payment(price, 'Оплата подписки', client.email)
 
@@ -86,6 +100,19 @@ async def pay_subscription(
     await query.message.edit_text(
         f'Ваша ссылка на оплату:\n\n{payment.confirmation_url}',
         reply_markup=pay_subscription_kb,
+    )
+
+
+@router.message(F.text, StateFilter(StartState.email))
+async def set_client_email(msg: Message, state: FSMContext):
+    email = await validate_email(msg)
+    price = await SubscriptionPrice.objects.afirst()
+    await Client.objects.filter(pk=msg.chat.id).aupdate(email=email)
+
+    await state.set_state()
+    await msg.answer(
+        f'Подписка стоит {price.price} ₽ в месяц\n\n',
+        reply_markup=subscribe_kb,
     )
 
 
